@@ -255,7 +255,8 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
         if (data.length > maxRows) {
           yOffset += 5;
           pdf.setTextColor(100, 100, 100);
-          pdf.setFontStyle('italic');
+          // Fix: setFontStyle doesn't exist in jsPDF v3, use setFont with style parameter instead
+          pdf.setFont(undefined, 'italic');
           pdf.text(`(${data.length - maxRows} more rows not shown)`, margins, yOffset);
         }
       }
