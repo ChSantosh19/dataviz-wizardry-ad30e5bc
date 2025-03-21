@@ -185,7 +185,7 @@ const generateRecommendations = (
         type: 'pie',
         title: `Distribution of ${catCol.name}`,
         categoryField: catCol.name,
-        valueField: 'count',
+        valueField: numericColumns.length > 0 ? numericColumns[0].name : 'count',
         description: `Pie chart showing the distribution of ${catCol.name}`,
         strength: 0.7
       });
@@ -202,11 +202,11 @@ const generateRecommendations = (
       // Only recommend scatter plots for columns with meaningful correlation
       if (Math.abs(correlation) > 0.3) {
         recommendations.push({
-          type: 'line',
+          type: 'scatter',
           title: `${col1.name} vs ${col2.name}`,
           xAxis: col1.name,
           yAxis: col2.name,
-          description: `Line chart comparing ${col1.name} and ${col2.name}`,
+          description: `Scatter plot comparing ${col1.name} and ${col2.name}`,
           strength: Math.abs(correlation)
         });
       }
@@ -237,6 +237,30 @@ const generateRecommendations = (
       valueField: numericColumns[0].name,
       description: `Radar chart comparing multiple dimensions`,
       strength: 0.6
+    });
+  }
+  
+  // 6. Add histograms for numeric columns
+  for (const numCol of numericColumns) {
+    recommendations.push({
+      type: 'histogram',
+      title: `Distribution of ${numCol.name}`,
+      xAxis: numCol.name,
+      description: `Histogram showing the distribution of ${numCol.name} values`,
+      strength: 0.7
+    });
+  }
+  
+  // 7. Add heatmaps for correlated numeric columns
+  if (numericColumns.length >= 2) {
+    recommendations.push({
+      type: 'heatmap',
+      title: `Correlation Heatmap`,
+      xAxis: numericColumns[0].name,
+      yAxis: numericColumns[1].name,
+      valueField: numericColumns.length > 2 ? numericColumns[2].name : undefined,
+      description: `Heatmap showing correlations between variables`,
+      strength: 0.65
     });
   }
   

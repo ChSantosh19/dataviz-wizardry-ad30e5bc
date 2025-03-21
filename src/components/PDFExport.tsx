@@ -132,8 +132,8 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
       for (let i = 0; i < chartContainers.length; i++) {
         const chart = chartContainers[i] as HTMLElement;
         
-        // Check if we need a new page
-        if (yOffset + 100 > pdfHeight - margins) {
+        // Always start each chart on a new page for better visibility
+        if (i > 0) {
           pdf.addPage();
           yOffset = margins;
         }
@@ -147,9 +147,17 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
         pdf.text(title, margins, yOffset);
         yOffset += 7;
         
+        // Get chart description if available
+        const descriptionElement = chart.querySelector('.text-muted-foreground');
+        if (descriptionElement) {
+          pdf.setFontSize(10);
+          pdf.text((descriptionElement as HTMLElement).innerText, margins, yOffset);
+          yOffset += 10;
+        }
+        
         // Capture chart with improved settings for better visibility
         const canvas = await html2canvas(chart, {
-          scale: 3, // Higher scale for better quality
+          scale: 4, // Higher scale for better quality
           logging: false,
           useCORS: true,
           allowTaint: true,
@@ -167,22 +175,28 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
                 // Enhance lines and text
                 const paths = svg.querySelectorAll('path');
                 paths.forEach(path => {
-                  path.style.strokeWidth = '2px';
+                  path.style.strokeWidth = '3px';
                 });
                 
                 const texts = svg.querySelectorAll('text');
                 texts.forEach(text => {
                   text.style.fontWeight = 'bold';
-                  text.style.fontSize = '12px';
+                  text.style.fontSize = '14px';
+                });
+
+                // Enhance dots in scatter plots
+                const circles = svg.querySelectorAll('circle');
+                circles.forEach(circle => {
+                  circle.setAttribute('r', '6');
                 });
               });
             }
           }
         });
         
-        // Calculate dimensions to fit the page properly
+        // Calculate dimensions to fit the page properly - make charts larger in the PDF
         const imgWidth = pdfWidth - (margins * 2);
-        const imgHeight = Math.min((canvas.height * imgWidth) / canvas.width, 80);
+        const imgHeight = Math.min((canvas.height * imgWidth) / canvas.width, 150); // Larger height for better visibility
         
         // Add the image to the PDF
         try {
@@ -191,11 +205,9 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
         } catch (e) {
           console.error("Error adding image to PDF:", e);
         }
-        
-        yOffset += imgHeight + 15; // Move to position for next chart with padding
       }
       
-      // Add data sample section (just the first 10-15 rows to avoid repetition)
+      // Add data sample section at the end
       pdf.addPage();
       yOffset = margins;
       
@@ -285,8 +297,8 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
       className="flex items-center space-x-2"
       size="lg"
     >
-      <Download className="h-4 w-4" />
-      <span>Export as PDF</span>
+      <Download className="h-4 w-4 mr-2" />
+      Export as PDF
     </Button>
   );
 };

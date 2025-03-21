@@ -50,6 +50,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [dataSummary, setDataSummary] = useState<DataSummary | null>(null);
   const [recommendedVisualizations, setRecommendedVisualizations] = useState<VisualizationConfig[]>([]);
 
+  // Update columns when data changes
   useEffect(() => {
     if (data.length > 0) {
       const firstRow = data[0];
@@ -59,6 +60,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [data]);
 
+  // Update recommended visualizations when data summary changes
   useEffect(() => {
     if (dataSummary?.recommendedVisualizations) {
       const vizConfigs = dataSummary.recommendedVisualizations.map(rec => ({
@@ -94,9 +96,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const generateAllVisualizations = () => {
-    // Add all recommended visualizations
-    const allViz = [...recommendedVisualizations.slice(0, 10)]; // Limit to top 10 recommendations
-    setVisualizations((prev) => [...prev, ...allViz]);
+    // Add all recommended visualizations at once
+    // This ensures we generate all possible combinations without user selection
+    // Limit to prevent overwhelming with too many charts
+    const allViz = [...recommendedVisualizations.slice(0, 20)]; 
+    setVisualizations(allViz);
   };
 
   return (
