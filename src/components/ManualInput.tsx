@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Trash2, Save } from 'lucide-react';
+import { PlusCircle, Trash2, Save, Edit3 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ManualInput: React.FC = () => {
   const { setData, setFileName } = useData();
@@ -132,100 +132,111 @@ const ManualInput: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center space-x-3">
-        <Input 
-          value={tableName}
-          onChange={(e) => setTableName(e.target.value)}
-          className="max-w-[300px] font-medium"
-          placeholder="Enter table name"
-        />
-      </div>
-      
-      <Card className="overflow-hidden shadow-sm border border-border/20">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="bg-secondary/50">
-              <tr>
-                {columns.map((column, columnIndex) => (
-                  <th key={columnIndex} className="p-3 border-b border-border/20">
-                    <div className="flex items-center justify-between space-x-2">
-                      <Input 
-                        value={column}
-                        onChange={(e) => handleColumnNameChange(columnIndex, e.target.value)}
-                        className="h-8 text-sm font-medium"
-                      />
+    <Card className="border-2 shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl flex items-center gap-2">
+          <Edit3 className="h-5 w-5 text-primary" />
+          Manual Data Entry
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium text-foreground">Dataset Name:</label>
+            <Input 
+              value={tableName}
+              onChange={(e) => setTableName(e.target.value)}
+              className="max-w-[300px] font-medium"
+              placeholder="Enter dataset name"
+            />
+          </div>
+          
+          <Card className="overflow-hidden shadow-sm border border-border/30">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead className="bg-secondary/50">
+                  <tr>
+                    {columns.map((column, columnIndex) => (
+                      <th key={columnIndex} className="p-3 border-b border-border/20">
+                        <div className="flex items-center justify-between space-x-2">
+                          <Input 
+                            value={column}
+                            onChange={(e) => handleColumnNameChange(columnIndex, e.target.value)}
+                            className="h-8 text-sm font-medium"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full"
+                            onClick={() => removeColumn(columnIndex)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </th>
+                    ))}
+                    <th className="p-2 w-12">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 rounded-full"
-                        onClick={() => removeColumn(columnIndex)}
+                        className="h-8 w-8 rounded-full"
+                        onClick={addColumn}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <PlusCircle className="h-4 w-4" />
                       </Button>
-                    </div>
-                  </th>
-                ))}
-                <th className="p-2 w-12">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full"
-                    onClick={addColumn}
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, rowIndex) => (
-                <tr key={rowIndex} className="border-b border-border/10 hover:bg-secondary/30 transition-colors">
-                  {columns.map((column, columnIndex) => (
-                    <td key={`${rowIndex}-${columnIndex}`} className="p-2">
-                      <Input 
-                        value={row[column] || ''}
-                        onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </td>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="border-b border-border/10 hover:bg-secondary/30 transition-colors">
+                      {columns.map((column, columnIndex) => (
+                        <td key={`${rowIndex}-${columnIndex}`} className="p-2">
+                          <Input 
+                            value={row[column] || ''}
+                            onChange={(e) => handleCellChange(rowIndex, column, e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                        </td>
+                      ))}
+                      <td className="p-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => removeRow(rowIndex)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
                   ))}
-                  <td className="p-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full"
-                      onClick={() => removeRow(rowIndex)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          </Card>
+          
+          <div className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={addRow}
+              className="px-4 py-2 transition-colors flex items-center space-x-2"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Row
+            </Button>
+            
+            <Button 
+              onClick={saveData}
+              className="px-4 py-2 transition-colors flex items-center"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Data
+            </Button>
+          </div>
         </div>
-      </Card>
-      
-      <div className="flex justify-between">
-        <Button 
-          variant="outline" 
-          onClick={addRow}
-          className="px-4 py-2 transition-colors flex items-center space-x-2"
-        >
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Add Row
-        </Button>
-        
-        <Button 
-          onClick={saveData}
-          className="px-4 py-2 transition-colors flex items-center"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Save Data
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -11,11 +11,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Layers, Trash2, Download, PlusCircle, BarChart as BarChartIcon
+  Layers, Trash2, Download, BarChart as BarChartIcon,
+  PieChart as PieChartIcon, LineChart as LineChartIcon,
+  ScatterChart as ScatterChartIcon, Activity,
+  FileBarChart2, Grid3X3, Radar as RadarIcon
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import html2canvas from 'html2canvas';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#06B6D4', '#16A34A', '#EF4444'];
 
@@ -85,7 +90,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <PieChart>
             <Pie
               data={sortedData}
@@ -93,7 +98,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               cy="50%"
               labelLine={true}
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={120}
+              outerRadius={180}
               fill="#8884d8"
               dataKey="value"
               animationDuration={800}
@@ -129,19 +134,18 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       }
       
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis />
             <Tooltip />
@@ -162,19 +166,18 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'line' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <LineChart
             data={data}
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis />
             <Tooltip />
@@ -184,6 +187,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               dataKey={yAxis} 
               stroke="#3B82F6" 
               strokeWidth={3}
+              dot={{ strokeWidth: 2, r: 4 }}
               activeDot={{ r: 8 }}
               animationDuration={800}
               animationBegin={100}
@@ -196,19 +200,18 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'area' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis />
             <Tooltip />
@@ -230,11 +233,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'scatter' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <ScatterChart
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               name={xAxis} 
@@ -247,7 +249,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               type="number"
               label={{ value: yAxis, angle: -90, position: 'insideLeft' }}
             />
-            <ZAxis range={[80, 80]} />
+            <ZAxis range={[60, 200]} />
             <Tooltip cursor={{ strokeDasharray: '3 3' }} />
             <Legend />
             <Scatter 
@@ -297,8 +299,8 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={400}>
-          <RadarChart cx="50%" cy="50%" outerRadius={120} data={sortedData}>
+        <ResponsiveContainer width="100%" height={500}>
+          <RadarChart cx="50%" cy="50%" outerRadius={180} data={sortedData}>
             <PolarGrid stroke="#888" />
             <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
             <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
@@ -342,19 +344,18 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       });
       
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <BarChart
             data={histogramData}
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="bin" 
               tick={{ fontSize: 10 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis label={{ value: 'Frequency', angle: -90, position: 'insideLeft' }} />
             <Tooltip 
@@ -413,11 +414,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       const valueRange = maxValue - minValue;
       
       return (
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={500}>
           <ScatterChart
-            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="x" 
               type="category"
@@ -426,7 +426,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis 
               dataKey="y" 
@@ -435,7 +435,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               width={100}
             />
             <Tooltip 
-              cursor={{ strokeDasharray: '3 3' }}
+              cursor={false}
               formatter={(value) => [`${value}`, valueField || 'Count']}
             />
             <Scatter 
@@ -466,7 +466,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
             </Scatter>
             <ZAxis 
               dataKey="value" 
-              range={[30, 80]}
+              range={[60, 150]}
               name={valueField || 'Count'}
             />
           </ScatterChart>
@@ -481,12 +481,29 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     );
   };
 
+  const getChartIcon = () => {
+    switch (config.type) {
+      case 'bar': return <BarChartIcon className="h-5 w-5 text-primary" />;
+      case 'line': return <LineChartIcon className="h-5 w-5 text-primary" />;
+      case 'pie': return <PieChartIcon className="h-5 w-5 text-primary" />;
+      case 'scatter': return <ScatterChartIcon className="h-5 w-5 text-primary" />;
+      case 'area': return <Activity className="h-5 w-5 text-primary" />;
+      case 'heatmap': return <Grid3X3 className="h-5 w-5 text-primary" />;
+      case 'histogram': return <FileBarChart2 className="h-5 w-5 text-primary" />;
+      case 'radar': return <RadarIcon className="h-5 w-5 text-primary" />;
+      default: return <BarChartIcon className="h-5 w-5 text-primary" />;
+    }
+  };
+
   return (
-    <Card className="chart-container animate-scale" id={`chart-${index}`}>
-      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-xl font-medium card-title">{config.title}</CardTitle>
+    <Card className="chart-container animate-scale shadow-md" id={`chart-${index}`}>
+      <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between space-y-0 border-b">
+        <div className="flex items-center gap-2">
+          {getChartIcon()}
+          <CardTitle className="text-xl font-medium">{config.title}</CardTitle>
+        </div>
         <div className="flex items-center space-x-2">
-          <Badge variant="outline">{config.type}</Badge>
+          <Badge variant="outline" className="text-xs font-medium px-2 py-1">{config.type}</Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -507,7 +524,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-2 pt-4">
         {config.description && (
           <p className="text-muted-foreground text-sm mb-4">{config.description}</p>
         )}
@@ -517,8 +534,84 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
   );
 };
 
+const VisualizationTypeSelector: React.FC = () => {
+  const { selectedVizTypes, setSelectedVizTypes, allVizTypes } = useData();
+
+  const handleTypeToggle = (type: VisualizationType) => {
+    if (selectedVizTypes.includes(type)) {
+      // Remove if already selected
+      setSelectedVizTypes(selectedVizTypes.filter(t => t !== type));
+    } else {
+      // Add if not selected
+      setSelectedVizTypes([...selectedVizTypes, type]);
+    }
+  };
+
+  const getVizTypeIcon = (type: VisualizationType) => {
+    switch (type) {
+      case 'bar': return <BarChartIcon className="h-5 w-5" />;
+      case 'line': return <LineChartIcon className="h-5 w-5" />;
+      case 'pie': return <PieChartIcon className="h-5 w-5" />;
+      case 'scatter': return <ScatterChartIcon className="h-5 w-5" />;
+      case 'area': return <Activity className="h-5 w-5" />;
+      case 'heatmap': return <Grid3X3 className="h-5 w-5" />;
+      case 'histogram': return <FileBarChart2 className="h-5 w-5" />;
+      case 'radar': return <RadarIcon className="h-5 w-5" />;
+      default: return <BarChartIcon className="h-5 w-5" />;
+    }
+  };
+
+  const getVizTypeName = (type: VisualizationType) => {
+    switch (type) {
+      case 'bar': return 'Bar Charts';
+      case 'line': return 'Line Charts';
+      case 'pie': return 'Pie Charts';
+      case 'scatter': return 'Scatter Plots';
+      case 'area': return 'Area Charts';
+      case 'heatmap': return 'Heatmaps';
+      case 'histogram': return 'Histograms';
+      case 'radar': return 'Radar Charts';
+      default: return type;
+    }
+  };
+
+  return (
+    <Card className="border border-border/30 mb-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium">Select Visualization Types</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">
+          Choose which types of charts to generate from your data:
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {allVizTypes.map((type) => (
+            <div key={type} className="flex items-start space-x-2">
+              <Checkbox 
+                id={`viz-type-${type}`} 
+                checked={selectedVizTypes.includes(type)}
+                onCheckedChange={() => handleTypeToggle(type)}
+                className="mt-1"
+              />
+              <div className="grid gap-1">
+                <Label 
+                  htmlFor={`viz-type-${type}`}
+                  className="flex items-center gap-2 font-medium"
+                >
+                  {getVizTypeIcon(type)}
+                  {getVizTypeName(type)}
+                </Label>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const Visualizations: React.FC = () => {
-  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations } = useData();
+  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations, selectedVizTypes } = useData();
   const [autoGenerated, setAutoGenerated] = useState(false);
 
   useEffect(() => {
@@ -534,7 +627,7 @@ const Visualizations: React.FC = () => {
       
       toast({
         title: "Visualizations generated",
-        description: `Created ${recommendedVisualizations.length} visualizations based on your data`,
+        description: `Created visualizations based on your selected chart types`,
       });
     }
   };
@@ -550,29 +643,33 @@ const Visualizations: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {recommendedVisualizations.length > 0 && !autoGenerated && (
-        <Card className="border border-border/20 shadow-sm">
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-lg font-medium">Data Visualization</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <p className="mb-4 text-muted-foreground">
-              We've analyzed your data and found {recommendedVisualizations.length} potential visualizations.
-              Click the button below to generate all of them automatically.
-            </p>
-            <Button 
-              className="w-full mt-2 flex items-center space-x-2" 
-              onClick={handleAutoGenerate}
-              size="lg"
-            >
-              <BarChartIcon className="h-5 w-5 mr-2" />
-              Generate All Visualizations
-            </Button>
-          </CardContent>
-        </Card>
+        <>
+          <VisualizationTypeSelector />
+          
+          <Card className="border border-border/30 shadow-sm">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-lg font-medium">Data Visualization</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <p className="mb-4 text-base text-muted-foreground">
+                We've analyzed your data and found {recommendedVisualizations.length} potential visualizations.
+                Select your preferred chart types above and click the button below to generate them automatically.
+              </p>
+              <Button 
+                className="w-full mt-2 flex items-center space-x-2" 
+                onClick={handleAutoGenerate}
+                size="lg"
+              >
+                <BarChartIcon className="h-5 w-5 mr-2" />
+                Generate All Visualizations ({selectedVizTypes.length} types selected)
+              </Button>
+            </CardContent>
+          </Card>
+        </>
       )}
       
       {visualizations.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 gap-8 mt-8">
           {visualizations.map((config, index) => (
             <ChartContainer
               key={index}
@@ -585,7 +682,7 @@ const Visualizations: React.FC = () => {
       ) : (
         <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-border rounded-lg bg-background">
           <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <PlusCircle className="h-8 w-8 text-primary" />
+            <Layers className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-lg font-medium mb-2">No visualizations yet</h3>
           <p className="text-muted-foreground max-w-md mb-6">

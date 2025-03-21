@@ -1,11 +1,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, File, X, Loader2 } from 'lucide-react';
+import { Upload, File, X, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { processFile } from '../utils/dataProcessor';
 import { useData } from '../context/DataContext';
 import { toast } from '@/components/ui/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 
 const FileUpload: React.FC = () => {
   const { setData, setIsLoading, setFileName, setDataSummary } = useData();
@@ -69,69 +70,76 @@ const FileUpload: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div 
-        {...getRootProps()} 
-        className={`upload-area flex flex-col items-center justify-center cursor-pointer rounded-lg border-2 border-dashed p-8 transition-colors ${
-          isDragActive ? 'border-primary bg-primary/5' : 'border-border'
-        } ${currentFile ? 'border-primary/50 bg-primary/5' : ''}`}
-      >
-        <input {...getInputProps()} />
-        
-        {currentFile ? (
-          <div className="flex flex-col items-center space-y-2">
-            <File className="h-12 w-12 text-primary/80" />
-            <div className="flex items-center">
-              <span className="text-sm text-foreground/80 max-w-[200px] truncate">
-                {currentFile.name}
-              </span>
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation();
-                  removeFile(); 
-                }}
-                className="ml-2 p-1 rounded-full hover:bg-secondary/80 transition-colors"
-              >
-                <X className="h-4 w-4 text-foreground/70" />
-              </button>
-            </div>
-            <span className="text-xs text-foreground/60">
-              {(currentFile.size / 1024).toFixed(1)} KB
-            </span>
+    <Card className="border-2 shadow-sm mb-4">
+      <CardContent className="p-6">
+        <div className="space-y-6 animate-fade-in">
+          <div 
+            {...getRootProps()} 
+            className={`upload-area flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed p-12 transition-all ${
+              isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+            } ${currentFile ? 'border-primary/50 bg-primary/5' : ''}`}
+          >
+            <input {...getInputProps()} />
+            
+            {currentFile ? (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FileSpreadsheet className="h-10 w-10 text-primary" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-1">{currentFile.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {(currentFile.size / 1024 / 1024).toFixed(2)} MB · Ready to process
+                  </p>
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      removeFile(); 
+                    }}
+                    className="mt-2 p-1 rounded-full hover:bg-secondary/80 transition-colors text-sm text-muted-foreground flex items-center mx-auto"
+                  >
+                    <X className="h-3 w-3 mr-1" /> Remove file
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Upload className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-2xl font-semibold text-foreground/90 mb-2">
+                  {isDragActive ? "Drop your file here" : "Drag & drop your data file"}
+                </h3>
+                <p className="text-base text-muted-foreground mb-3 max-w-md text-center">
+                  Upload your Excel (.xlsx, .xls) or CSV file to analyze and visualize your data instantly
+                </p>
+                <Button variant="outline" className="mt-2">
+                  Browse Files
+                </Button>
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <Upload className="h-12 w-12 text-foreground/60 mb-2" />
-            <p className="text-lg font-medium text-foreground/80 mb-1">
-              {isDragActive ? "Drop the file here" : "Drag & drop your Excel or CSV file"}
-            </p>
-            <p className="text-sm text-foreground/60 mb-3">
-              or click to browse your files
-            </p>
-            <p className="text-xs text-foreground/50 max-w-xs text-center">
-              Supports Excel (.xlsx, .xls) and CSV files
-            </p>
-          </>
-        )}
-      </div>
 
-      {currentFile && (
-        <Button 
-          onClick={processDataFile}
-          className="w-full py-6 transition-all duration-300 animate-fade-in"
-          disabled={processingFile}
-        >
-          {processingFile ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing File...
-            </>
-          ) : (
-            <>Process File</>
+          {currentFile && (
+            <Button 
+              onClick={processDataFile}
+              className="w-full py-6 text-lg transition-all animate-fade-in"
+              disabled={processingFile}
+              size="lg"
+            >
+              {processingFile ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Processing Data...
+                </>
+              ) : (
+                <>Analyze & Visualize Data</>
+              )}
+            </Button>
           )}
-        </Button>
-      )}
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

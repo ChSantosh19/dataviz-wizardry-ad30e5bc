@@ -35,6 +35,9 @@ interface DataContextProps {
   setDataSummary: (summary: DataSummary | null) => void;
   recommendedVisualizations: VisualizationConfig[];
   generateAllVisualizations: () => void;
+  selectedVizTypes: VisualizationType[];
+  setSelectedVizTypes: (types: VisualizationType[]) => void;
+  allVizTypes: VisualizationType[];
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -49,6 +52,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [fileName, setFileName] = useState<string>("data");
   const [dataSummary, setDataSummary] = useState<DataSummary | null>(null);
   const [recommendedVisualizations, setRecommendedVisualizations] = useState<VisualizationConfig[]>([]);
+  const [selectedVizTypes, setSelectedVizTypes] = useState<VisualizationType[]>([
+    "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
+  ]);
+  
+  const allVizTypes: VisualizationType[] = [
+    "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
+  ];
 
   // Update columns when data changes
   useEffect(() => {
@@ -96,10 +106,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const generateAllVisualizations = () => {
-    // Add all recommended visualizations at once
-    // This ensures we generate all possible combinations without user selection
+    // Filter recommended visualizations by the selected types
+    const filteredViz = recommendedVisualizations.filter(viz => 
+      selectedVizTypes.includes(viz.type)
+    );
+    
     // Limit to prevent overwhelming with too many charts
-    const allViz = [...recommendedVisualizations.slice(0, 20)]; 
+    const allViz = [...filteredViz.slice(0, 20)]; 
     setVisualizations(allViz);
   };
 
@@ -121,6 +134,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         setDataSummary,
         recommendedVisualizations,
         generateAllVisualizations,
+        selectedVizTypes,
+        setSelectedVizTypes,
+        allVizTypes,
       }}
     >
       {children}
