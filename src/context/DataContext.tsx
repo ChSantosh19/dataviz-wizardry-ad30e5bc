@@ -1,11 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { DataSummary } from "../utils/dataAnalyzer";
 
 export interface DataRow {
   [key: string]: string | number;
 }
 
-export type VisualizationType = "bar" | "line" | "pie" | "area" | "radar";
+export type VisualizationType = "bar" | "line" | "pie" | "area" | "radar" | "scatter" | "heatmap" | "histogram";
 
 export interface VisualizationConfig {
   type: VisualizationType;
@@ -14,6 +15,8 @@ export interface VisualizationConfig {
   yAxis?: string;
   valueField?: string;
   categoryField?: string;
+  strength?: number;
+  description?: string;
 }
 
 interface DataContextProps {
@@ -28,6 +31,10 @@ interface DataContextProps {
   clearData: () => void;
   fileName: string;
   setFileName: (name: string) => void;
+  dataSummary: DataSummary | null;
+  setDataSummary: (summary: DataSummary | null) => void;
+  recommendedVisualizations: VisualizationConfig[];
+  generateAllVisualizations: () => void;
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -40,6 +47,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [visualizations, setVisualizations] = useState<VisualizationConfig[]>([]);
   const [fileName, setFileName] = useState<string>("data");
+  const [dataSummary, setDataSummary] = useState<DataSummary | null>(null);
+  const [recommendedVisualizations, setRecommendedVisualizations] = useState<VisualizationConfig[]>([]);
 
   useEffect(() => {
     if (data.length > 0) {
@@ -49,6 +58,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setColumns([]);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (dataSummary?.recommendedVisualizations) {
+      const vizConfigs = dataSummary.recommendedVisualizations.map(rec => ({
+        type: rec.type as VisualizationType,
+        title: rec.title,
+        xAxis: rec.xAxis,
+        yAxis: rec.yAxis,
+        valueField: rec.valueField,
+        categoryField: rec.categoryField,
+        strength: rec.strength,
+        description: rec.description
+      }));
+      setRecommendedVisualizations(vizConfigs);
+    } else {
+      setRecommendedVisualizations([]);
+    }
+  }, [dataSummary]);
 
   const addVisualization = (config: VisualizationConfig) => {
     setVisualizations((prev) => [...prev, config]);
@@ -62,6 +89,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setData([]);
     setVisualizations([]);
     setFileName("data");
+    setDataSummary(null);
+    setRecommendedVisualizations([]);
+  };
+
+  const generateAllVisualizations = () => {
+    // Add all recommended visualizations
+    const allViz = [...recommendedVisualizations.slice(0, 10)]; // Limit to top 10 recommendations
+    setVisualizations((prev) => [...prev, ...allViz]);
   };
 
   return (
@@ -78,6 +113,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         clearData,
         fileName,
         setFileName,
+        dataSummary,
+        setDataSummary,
+        recommendedVisualizations,
+        generateAllVisualizations,
       }}
     >
       {children}

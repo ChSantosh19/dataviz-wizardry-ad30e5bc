@@ -1,15 +1,16 @@
 
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, File, X } from 'lucide-react';
+import { Upload, File, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { processExcelFile } from '../utils/dataProcessor';
+import { processFile } from '../utils/dataProcessor';
 import { useData } from '../context/DataContext';
 import { toast } from '@/components/ui/use-toast';
 
 const FileUpload: React.FC = () => {
-  const { setData, setIsLoading, setFileName } = useData();
+  const { setData, setIsLoading, setFileName, setDataSummary } = useData();
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [processingFile, setProcessingFile] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -38,16 +39,18 @@ const FileUpload: React.FC = () => {
     maxFiles: 1,
   });
 
-  const processFile = async () => {
+  const processDataFile = async () => {
     if (!currentFile) return;
     
     setIsLoading(true);
+    setProcessingFile(true);
     try {
-      const processedData = await processExcelFile(currentFile);
+      const { data: processedData, summary } = await processFile(currentFile);
       setData(processedData);
+      setDataSummary(summary);
       toast({
-        title: "File uploaded successfully",
-        description: `Loaded ${processedData.length} rows of data`,
+        title: "File processed successfully",
+        description: `Loaded ${processedData.length} rows of data with ${summary.columnCount} columns`,
       });
     } catch (error) {
       toast({
@@ -57,6 +60,7 @@ const FileUpload: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      setProcessingFile(false);
     }
   };
 
@@ -68,8 +72,8 @@ const FileUpload: React.FC = () => {
     <div className="space-y-4 animate-fade-in">
       <div 
         {...getRootProps()} 
-        className={`upload-area flex flex-col items-center justify-center cursor-pointer ${
-          isDragActive ? 'active' : ''
+        className={`upload-area flex flex-col items-center justify-center cursor-pointer rounded-lg border-2 border-dashed p-8 transition-colors ${
+          isDragActive ? 'border-primary bg-primary/5' : 'border-border'
         } ${currentFile ? 'border-primary/50 bg-primary/5' : ''}`}
       >
         <input {...getInputProps()} />
@@ -99,7 +103,7 @@ const FileUpload: React.FC = () => {
           <>
             <Upload className="h-12 w-12 text-foreground/60 mb-2" />
             <p className="text-lg font-medium text-foreground/80 mb-1">
-              {isDragActive ? "Drop the file here" : "Drag & drop your Excel file"}
+              {isDragActive ? "Drop the file here" : "Drag & drop your Excel or CSV file"}
             </p>
             <p className="text-sm text-foreground/60 mb-3">
               or click to browse your files
@@ -113,10 +117,18 @@ const FileUpload: React.FC = () => {
 
       {currentFile && (
         <Button 
-          onClick={processFile}
+          onClick={processDataFile}
           className="w-full py-6 transition-all duration-300 animate-fade-in"
+          disabled={processingFile}
         >
-          Process File
+          {processingFile ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing File...
+            </>
+          ) : (
+            <>Process File</>
+          )}
         </Button>
       )}
     </div>

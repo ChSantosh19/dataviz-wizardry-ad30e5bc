@@ -1,17 +1,19 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from '@/components/Navbar';
 import FileUpload from '@/components/FileUpload';
 import ManualInput from '@/components/ManualInput';
 import Visualizations from '@/components/Visualizations';
+import DataSummary from '@/components/DataSummary';
 import PDFExport from '@/components/PDFExport';
 import { DataProvider, useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileUpIcon, PencilRuler, BarChart, RefreshCw } from 'lucide-react';
+import { ArrowRight, FileUpIcon, PencilRuler, BarChart, RefreshCw, ListFilter } from 'lucide-react';
 
 const DataControls = () => {
-  const { data, clearData } = useData();
+  const { data, clearData, dataSummary } = useData();
+  const [activeTab, setActiveTab] = useState<string>("summary");
   const visualizationRef = useRef<HTMLDivElement>(null);
   
   return (
@@ -20,7 +22,7 @@ const DataControls = () => {
         <div className="animate-fade-in">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 mt-2 space-y-4 md:space-y-0">
             <h2 className="text-2xl font-semibold">
-              Your Visualizations
+              Your Data
               <span className="ml-2 text-sm font-normal text-muted-foreground">
                 ({data.length} rows of data)
               </span>
@@ -38,9 +40,34 @@ const DataControls = () => {
             </div>
           </div>
           
-          <div ref={visualizationRef}>
-            <Visualizations />
-          </div>
+          <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="summary" className="flex items-center space-x-2 py-3">
+                <ListFilter className="h-4 w-4" />
+                <span>Data Summary</span>
+              </TabsTrigger>
+              <TabsTrigger value="visualizations" className="flex items-center space-x-2 py-3">
+                <BarChart className="h-4 w-4" />
+                <span>Visualizations</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="summary">
+              <DataSummary />
+              <div className="flex justify-end mt-6">
+                <Button onClick={() => setActiveTab("visualizations")} className="flex items-center">
+                  Go to Visualizations
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="visualizations">
+              <div ref={visualizationRef}>
+                <Visualizations />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       ) : (
         <div className="mt-2">

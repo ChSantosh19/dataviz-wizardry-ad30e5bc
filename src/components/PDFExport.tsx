@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 import { toast } from '@/components/ui/use-toast';
 
 const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = ({ containerRef }) => {
-  const { data, visualizations, fileName } = useData();
+  const { data, visualizations, fileName, dataSummary } = useData();
   
   const exportToPDF = async () => {
     if (!containerRef.current || !visualizations.length) {
@@ -47,22 +47,93 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
       pdf.setFontSize(14);
       pdf.text('Data Summary', margins, margins + 25);
       
+      // Enhanced data summary section
       pdf.setFontSize(10);
-      pdf.text(`Total records: ${data.length}`, margins, margins + 32);
-      pdf.text(`Number of visualizations: ${visualizations.length}`, margins, margins + 38);
+      let summaryYOffset = margins + 32;
       
-      // Capture each visualization chart
-      let yOffset = margins + 48;
-      const chartHeight = 80; // height in mm for each chart
+      // Basic stats
+      pdf.text(`Total records: ${data.length}`, margins, summaryYOffset);
+      summaryYOffset += 6;
+      pdf.text(`Number of columns: ${dataSummary?.columnCount || 0}`, margins, summaryYOffset);
+      summaryYOffset += 6;
+      pdf.text(`Number of visualizations: ${visualizations.length}`, margins, summaryYOffset);
+      summaryYOffset += 10;
       
-      // Iterate through all chart containers in the DOM
+      // Column information
+      if (dataSummary?.columns && dataSummary.columns.length > 0) {
+        pdf.setFontSize(12);
+        pdf.text('Column Types:', margins, summaryYOffset);
+        pdf.setFontSize(9);
+        summaryYOffset += 6;
+        
+        // Create a simple table for column info
+        const columnInfoTable = [];
+        columnInfoTable.push(['Column Name', 'Type', 'Unique Values', 'Missing Values']);
+        
+        dataSummary.columns.slice(0, 15).forEach(col => {
+          columnInfoTable.push([
+            col.name.substring(0, 20) + (col.name.length > 20 ? '...' : ''),
+            col.type,
+            col.uniqueValues.toString(),
+            col.missingValues.toString()
+          ]);
+        });
+        
+        const colWidths = [80, 40, 30, 30];
+        const rowHeight = 7;
+        
+        // Header row
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margins, summaryYOffset, pdfWidth - margins * 2, rowHeight, 'F');
+        
+        let xOffset = margins;
+        for (let i = 0; i < columnInfoTable[0].length; i++) {
+          pdf.text(columnInfoTable[0][i], xOffset + 2, summaryYOffset + 5);
+          xOffset += colWidths[i];
+        }
+        
+        summaryYOffset += rowHeight;
+        
+        // Data rows
+        for (let i = 1; i < columnInfoTable.length; i++) {
+          if (i % 2 === 0) {
+            pdf.setFillColor(250, 250, 250);
+            pdf.rect(margins, summaryYOffset, pdfWidth - margins * 2, rowHeight, 'F');
+          }
+          
+          xOffset = margins;
+          for (let j = 0; j < columnInfoTable[i].length; j++) {
+            pdf.text(columnInfoTable[i][j], xOffset + 2, summaryYOffset + 5);
+            xOffset += colWidths[j];
+          }
+          
+          summaryYOffset += rowHeight;
+          
+          // Check if we need a new page
+          if (summaryYOffset > pdfHeight - margins * 2) {
+            pdf.addPage();
+            summaryYOffset = margins;
+          }
+        }
+      }
+      
+      // Add a page for visualizations
+      pdf.addPage();
+      let yOffset = margins;
+      
+      // Title for visualizations
+      pdf.setFontSize(16);
+      pdf.text('Visualizations', margins, yOffset);
+      yOffset += 10;
+      
+      // Capture each visualization chart with higher quality
       const chartContainers = containerRef.current.querySelectorAll('.chart-container');
       
       for (let i = 0; i < chartContainers.length; i++) {
         const chart = chartContainers[i] as HTMLElement;
         
         // Check if we need a new page
-        if (yOffset + chartHeight > pdfHeight - margins) {
+        if (yOffset + 100 > pdfHeight - margins) {
           pdf.addPage();
           yOffset = margins;
         }
@@ -72,112 +143,121 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
         const title = titleElement ? (titleElement as HTMLElement).innerText : `Chart ${i + 1}`;
         
         // Add chart title
-        pdf.setFontSize(12);
+        pdf.setFontSize(14);
         pdf.text(title, margins, yOffset);
+        yOffset += 7;
         
-        // Capture and add chart image
+        // Capture chart with improved settings for better visibility
         const canvas = await html2canvas(chart, {
-          scale: 2,
+          scale: 3, // Higher scale for better quality
           logging: false,
           useCORS: true,
           allowTaint: true,
+          backgroundColor: '#FFFFFF', // Force white background
+          onclone: (document, clone) => {
+            // Find the chart in the cloned document and adjust its styling
+            const cloneChart = clone.querySelector('.chart-container') as HTMLElement;
+            if (cloneChart) {
+              const svgElements = cloneChart.querySelectorAll('svg');
+              svgElements.forEach(svg => {
+                // Make SVG elements more visible
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                
+                // Enhance lines and text
+                const paths = svg.querySelectorAll('path');
+                paths.forEach(path => {
+                  path.style.strokeWidth = '2px';
+                });
+                
+                const texts = svg.querySelectorAll('text');
+                texts.forEach(text => {
+                  text.style.fontWeight = 'bold';
+                  text.style.fontSize = '12px';
+                });
+              });
+            }
+          }
         });
         
-        const imgData = canvas.toDataURL('image/png');
+        // Calculate dimensions to fit the page properly
         const imgWidth = pdfWidth - (margins * 2);
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgHeight = Math.min((canvas.height * imgWidth) / canvas.width, 80);
         
-        pdf.addImage(imgData, 'PNG', margins, yOffset + 5, imgWidth, imgHeight);
-        
-        yOffset += imgHeight + 25; // Move to position for next chart with padding
-      }
-      
-      // Add data table section if there's room, otherwise add a new page
-      if (yOffset + 60 > pdfHeight - margins) {
-        pdf.addPage();
-        yOffset = margins;
-      }
-      
-      // Add data table section title
-      pdf.setFontSize(14);
-      pdf.text('Data Table', margins, yOffset);
-      yOffset += 8;
-      
-      // Add data table
-      const columns = Object.keys(data[0]);
-      const cellWidth = (pdfWidth - (margins * 2)) / columns.length;
-      const cellHeight = 8;
-      
-      // Table header
-      pdf.setFillColor(240, 240, 240);
-      pdf.rect(margins, yOffset, pdfWidth - (margins * 2), cellHeight, 'F');
-      
-      pdf.setFontSize(8);
-      pdf.setTextColor(50, 50, 50);
-      
-      columns.forEach((col, colIndex) => {
-        pdf.text(
-          col.toString().substring(0, 16) + (col.length > 16 ? '...' : ''),
-          margins + (colIndex * cellWidth) + 2,
-          yOffset + 5,
-          { maxWidth: cellWidth - 4 }
-        );
-      });
-      
-      yOffset += cellHeight;
-      
-      // Table rows (limit to fit the page)
-      const maxRowsFirstPage = Math.floor((pdfHeight - yOffset - margins) / cellHeight);
-      let rowsAdded = 0;
-      
-      pdf.setTextColor(0, 0, 0);
-      
-      for (let i = 0; i < data.length; i++) {
-        // Check if we need a new page
-        if (rowsAdded >= maxRowsFirstPage && i < data.length) {
-          pdf.addPage();
-          yOffset = margins;
-          rowsAdded = 0;
-          
-          // Add table header on new page
-          pdf.setFillColor(240, 240, 240);
-          pdf.rect(margins, yOffset, pdfWidth - (margins * 2), cellHeight, 'F');
-          
-          pdf.setFontSize(8);
-          pdf.setTextColor(50, 50, 50);
-          
-          columns.forEach((col, colIndex) => {
-            pdf.text(
-              col.toString().substring(0, 16) + (col.length > 16 ? '...' : ''),
-              margins + (colIndex * cellWidth) + 2,
-              yOffset + 5,
-              { maxWidth: cellWidth - 4 }
-            );
-          });
-          
-          yOffset += cellHeight;
-          pdf.setTextColor(0, 0, 0);
+        // Add the image to the PDF
+        try {
+          const imgData = canvas.toDataURL('image/png');
+          pdf.addImage(imgData, 'PNG', margins, yOffset, imgWidth, imgHeight);
+        } catch (e) {
+          console.error("Error adding image to PDF:", e);
         }
         
-        // Alternate row colors
-        if (i % 2 === 1) {
-          pdf.setFillColor(252, 252, 252);
-          pdf.rect(margins, yOffset, pdfWidth - (margins * 2), cellHeight, 'F');
-        }
+        yOffset += imgHeight + 15; // Move to position for next chart with padding
+      }
+      
+      // Add data sample section (just the first 10-15 rows to avoid repetition)
+      pdf.addPage();
+      yOffset = margins;
+      
+      pdf.setFontSize(16);
+      pdf.text('Data Sample (First Rows)', margins, yOffset);
+      yOffset += 10;
+      
+      // Add data sample (first 15 rows max)
+      if (data.length > 0) {
+        const columns = Object.keys(data[0]);
+        const maxCols = Math.min(columns.length, 5); // Limit to 5 columns to fit on page
+        const selectedColumns = columns.slice(0, maxCols);
         
-        // Add cell values
-        columns.forEach((col, colIndex) => {
-          const value = data[i][col]?.toString() || '';
+        // Calculate column widths
+        const colWidth = Math.min(30, (pdfWidth - margins * 2) / maxCols);
+        
+        // Table header
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margins, yOffset, colWidth * maxCols, 7, 'F');
+        
+        pdf.setFontSize(8);
+        pdf.setTextColor(50, 50, 50);
+        
+        selectedColumns.forEach((col, colIndex) => {
           pdf.text(
-            value.substring(0, 16) + (value.length > 16 ? '...' : ''),
-            margins + (colIndex * cellWidth) + 2,
-            yOffset + 5,
-            { maxWidth: cellWidth - 4 }
+            col.toString().substring(0, 12) + (col.length > 12 ? '...' : ''),
+            margins + (colIndex * colWidth) + 2,
+            yOffset + 5
           );
         });
         
-        yOffset += cellHeight;
-        rowsAdded++;
+        yOffset += 7;
+        
+        // Table rows (limit to 15)
+        const maxRows = Math.min(data.length, 15);
+        
+        for (let i = 0; i < maxRows; i++) {
+          // Alternate row colors
+          if (i % 2 === 1) {
+            pdf.setFillColor(250, 250, 250);
+            pdf.rect(margins, yOffset, colWidth * maxCols, 7, 'F');
+          }
+          
+          selectedColumns.forEach((col, colIndex) => {
+            const value = data[i][col]?.toString() || '';
+            pdf.text(
+              value.substring(0, 14) + (value.length > 14 ? '...' : ''),
+              margins + (colIndex * colWidth) + 2,
+              yOffset + 5
+            );
+          });
+          
+          yOffset += 7;
+        }
+        
+        // If there are more rows, indicate this with a message
+        if (data.length > maxRows) {
+          yOffset += 5;
+          pdf.setTextColor(100, 100, 100);
+          pdf.setFontStyle('italic');
+          pdf.text(`(${data.length - maxRows} more rows not shown)`, margins, yOffset);
+        }
       }
       
       // Save the PDF

@@ -1,8 +1,10 @@
 
 import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 import { DataRow } from '../context/DataContext';
+import { analyzeData, DataSummary } from './dataAnalyzer';
 
-export const processExcelFile = async (file: File): Promise<DataRow[]> => {
+export const processExcelFile = async (file: File): Promise<{ data: DataRow[], summary: DataSummary }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -12,8 +14,24 @@ export const processExcelFile = async (file: File): Promise<DataRow[]> => {
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(sheet);
-        resolve(jsonData as DataRow[]);
+        
+        // Get headers with proper casing
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+        const headers: string[] = [];
+        
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })];
+          headers[C] = cell?.v ? String(cell.v) : `Column${C + 1}`;
+        }
+        
+        // Convert to JSON with proper header names
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: headers });
+        
+        // Analyze the data
+        const processedData = jsonData as DataRow[];
+        const summary = analyzeData(processedData);
+        
+        resolve({ data: processedData, summary });
       } catch (error) {
         reject(new Error('Failed to parse Excel file'));
       }
@@ -25,6 +43,40 @@ export const processExcelFile = async (file: File): Promise<DataRow[]> => {
     
     reader.readAsBinaryString(file);
   });
+};
+
+export const processCsvFile = async (file: File): Promise<{ data: DataRow[], summary: DataSummary }> => {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      dynamicTyping: true, // Automatically convert to proper types
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const processedData = results.data as DataRow[];
+          const summary = analyzeData(processedData);
+          resolve({ data: processedData, summary });
+        } catch (error) {
+          reject(new Error('Failed to process CSV data'));
+        }
+      },
+      error: (error) => {
+        reject(new Error(`CSV parsing error: ${error.message}`));
+      }
+    });
+  });
+};
+
+export const processFile = async (file: File): Promise<{ data: DataRow[], summary: DataSummary }> => {
+  const fileType = file.name.split('.').pop()?.toLowerCase();
+  
+  if (fileType === 'csv') {
+    return processCsvFile(file);
+  } else if (fileType === 'xlsx' || fileType === 'xls') {
+    return processExcelFile(file);
+  } else {
+    throw new Error('Unsupported file format. Please upload a CSV or Excel file.');
+  }
 };
 
 export const validateDataForVisualization = (
@@ -66,13 +118,14 @@ export const generateSampleData = (): DataRow[] => {
 
 export const prepareDataForPDF = (
   data: DataRow[],
-  visualizations: any[]
+  visualizations: any[],
+  summary: DataSummary
 ) => {
-  // This function would prepare the data for PDF export
-  // For now, we'll just return the raw data and visualizations
+  // Enhanced PDF data preparation
   return {
     data,
     visualizations,
+    summary,
     timestamp: new Date().toISOString(),
   };
 };
