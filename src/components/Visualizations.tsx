@@ -19,8 +19,6 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import html2canvas from 'html2canvas';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 
 const COLORS = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#EC4899', '#06B6D4', '#16A34A', '#EF4444'];
 
@@ -66,6 +64,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
 
     const { type, xAxis, yAxis, valueField, categoryField } = config;
     
+    // Common chart settings to remove grid lines and increase size
+    const chartMargin = { top: 30, right: 30, left: 40, bottom: 60 };
+    const chartHeight = 600; // Larger chart height
+    
     if (type === 'pie' && valueField && categoryField) {
       // Process data for pie chart
       const processedData = data.reduce((acc, row) => {
@@ -90,7 +92,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <PieChart>
             <Pie
               data={sortedData}
@@ -98,7 +100,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               cy="50%"
               labelLine={true}
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={180}
+              outerRadius={220}
               fill="#8884d8"
               dataKey="value"
               animationDuration={800}
@@ -134,10 +136,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       }
       
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey={xAxis} 
@@ -166,10 +168,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'line' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <LineChart
             data={data}
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey={xAxis} 
@@ -200,10 +202,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'area' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <AreaChart
             data={data}
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey={xAxis} 
@@ -233,9 +235,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'scatter' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <ScatterChart
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey={xAxis} 
@@ -249,7 +251,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               type="number"
               label={{ value: yAxis, angle: -90, position: 'insideLeft' }}
             />
-            <ZAxis range={[60, 200]} />
+            <ZAxis range={[80, 200]} />
             <Tooltip cursor={{ strokeDasharray: '3 3' }} />
             <Legend />
             <Scatter 
@@ -299,9 +301,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={500}>
-          <RadarChart cx="50%" cy="50%" outerRadius={180} data={sortedData}>
-            <PolarGrid stroke="#888" />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <RadarChart cx="50%" cy="50%" outerRadius={220} data={sortedData}>
+            <PolarGrid stroke="#eaeaea" />
             <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
             <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
             <Radar 
@@ -344,10 +346,10 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       });
       
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart
             data={histogramData}
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey="bin" 
@@ -414,9 +416,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       const valueRange = maxValue - minValue;
       
       return (
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <ScatterChart
-            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+            margin={chartMargin}
           >
             <XAxis 
               dataKey="x" 
@@ -466,7 +468,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
             </Scatter>
             <ZAxis 
               dataKey="value" 
-              range={[60, 150]}
+              range={[80, 200]}
               name={valueField || 'Count'}
             />
           </ScatterChart>
@@ -534,84 +536,8 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
   );
 };
 
-const VisualizationTypeSelector: React.FC = () => {
-  const { selectedVizTypes, setSelectedVizTypes, allVizTypes } = useData();
-
-  const handleTypeToggle = (type: VisualizationType) => {
-    if (selectedVizTypes.includes(type)) {
-      // Remove if already selected
-      setSelectedVizTypes(selectedVizTypes.filter(t => t !== type));
-    } else {
-      // Add if not selected
-      setSelectedVizTypes([...selectedVizTypes, type]);
-    }
-  };
-
-  const getVizTypeIcon = (type: VisualizationType) => {
-    switch (type) {
-      case 'bar': return <BarChartIcon className="h-5 w-5" />;
-      case 'line': return <LineChartIcon className="h-5 w-5" />;
-      case 'pie': return <PieChartIcon className="h-5 w-5" />;
-      case 'scatter': return <ScatterChartIcon className="h-5 w-5" />;
-      case 'area': return <Activity className="h-5 w-5" />;
-      case 'heatmap': return <Grid3X3 className="h-5 w-5" />;
-      case 'histogram': return <FileBarChart2 className="h-5 w-5" />;
-      case 'radar': return <RadarIcon className="h-5 w-5" />;
-      default: return <BarChartIcon className="h-5 w-5" />;
-    }
-  };
-
-  const getVizTypeName = (type: VisualizationType) => {
-    switch (type) {
-      case 'bar': return 'Bar Charts';
-      case 'line': return 'Line Charts';
-      case 'pie': return 'Pie Charts';
-      case 'scatter': return 'Scatter Plots';
-      case 'area': return 'Area Charts';
-      case 'heatmap': return 'Heatmaps';
-      case 'histogram': return 'Histograms';
-      case 'radar': return 'Radar Charts';
-      default: return type;
-    }
-  };
-
-  return (
-    <Card className="border border-border/30 mb-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Select Visualization Types</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose which types of charts to generate from your data:
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {allVizTypes.map((type) => (
-            <div key={type} className="flex items-start space-x-2">
-              <Checkbox 
-                id={`viz-type-${type}`} 
-                checked={selectedVizTypes.includes(type)}
-                onCheckedChange={() => handleTypeToggle(type)}
-                className="mt-1"
-              />
-              <div className="grid gap-1">
-                <Label 
-                  htmlFor={`viz-type-${type}`}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  {getVizTypeIcon(type)}
-                  {getVizTypeName(type)}
-                </Label>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 const Visualizations: React.FC = () => {
-  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations, selectedVizTypes } = useData();
+  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations, chartTypeSelection } = useData();
   const [autoGenerated, setAutoGenerated] = useState(false);
 
   useEffect(() => {
@@ -619,18 +545,14 @@ const Visualizations: React.FC = () => {
     setAutoGenerated(false);
   }, [data]);
 
-  // Auto-generate visualizations when data is available
-  const handleAutoGenerate = () => {
-    if (!autoGenerated && recommendedVisualizations.length > 0) {
+  // Auto-generate visualizations when chart types are selected
+  useEffect(() => {
+    if (chartTypeSelection && chartTypeSelection.length > 0 && recommendedVisualizations.length > 0) {
+      // Automatically generate visualizations when chart types are selected
       generateAllVisualizations();
       setAutoGenerated(true);
-      
-      toast({
-        title: "Visualizations generated",
-        description: `Created visualizations based on your selected chart types`,
-      });
     }
-  };
+  }, [chartTypeSelection, recommendedVisualizations, generateAllVisualizations]);
 
   if (!data.length) {
     return (
@@ -642,32 +564,6 @@ const Visualizations: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {recommendedVisualizations.length > 0 && !autoGenerated && (
-        <>
-          <VisualizationTypeSelector />
-          
-          <Card className="border border-border/30 shadow-sm">
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-lg font-medium">Data Visualization</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="mb-4 text-base text-muted-foreground">
-                We've analyzed your data and found {recommendedVisualizations.length} potential visualizations.
-                Select your preferred chart types above and click the button below to generate them automatically.
-              </p>
-              <Button 
-                className="w-full mt-2 flex items-center space-x-2" 
-                onClick={handleAutoGenerate}
-                size="lg"
-              >
-                <BarChartIcon className="h-5 w-5 mr-2" />
-                Generate All Visualizations ({selectedVizTypes.length} types selected)
-              </Button>
-            </CardContent>
-          </Card>
-        </>
-      )}
-      
       {visualizations.length > 0 ? (
         <div className="grid grid-cols-1 gap-8 mt-8">
           {visualizations.map((config, index) => (
@@ -687,12 +583,15 @@ const Visualizations: React.FC = () => {
           <h3 className="text-lg font-medium mb-2">No visualizations yet</h3>
           <p className="text-muted-foreground max-w-md mb-6">
             {recommendedVisualizations.length > 0 
-              ? "Click the 'Generate All Visualizations' button above to automatically create charts based on your data."
+              ? "Select chart types to generate visualizations based on your data."
               : "Upload data first to generate visualizations automatically."}
           </p>
           {recommendedVisualizations.length > 0 && (
             <Button 
-              onClick={handleAutoGenerate}
+              onClick={() => {
+                generateAllVisualizations();
+                setAutoGenerated(true);
+              }}
               className="flex items-center space-x-2"
               size="lg"
             >

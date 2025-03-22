@@ -1,7 +1,7 @@
 
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
-import { DataRow } from '../context/DataContext';
+import { DataRow, MathStats } from '../context/DataContext';
 import { analyzeData, DataSummary } from './dataAnalyzer';
 
 export const processExcelFile = async (file: File): Promise<{ data: DataRow[], summary: DataSummary }> => {
@@ -116,16 +116,132 @@ export const generateSampleData = (): DataRow[] => {
   return data;
 };
 
+// Calculate mathematical statistics from the data
+export const calculateMathStats = (data: DataRow[]): MathStats => {
+  if (!data || data.length === 0) {
+    return { 
+      numericColumns: [],
+      correlations: []
+    };
+  }
+  
+  const firstRow = data[0];
+  const columns = Object.keys(firstRow);
+  
+  // Identify numeric columns
+  const numericColumns = columns.filter(col => {
+    // Check if at least 80% of the values are numbers
+    const numericCount = data.filter(row => {
+      const val = row[col];
+      return typeof val === 'number' || (typeof val === 'string' && !isNaN(Number(val)));
+    }).length;
+    
+    return numericCount / data.length > 0.8;
+  });
+  
+  // Calculate stats for each numeric column
+  const columnStats = numericColumns.map(col => {
+    // Convert all values to numbers
+    const values = data
+      .map(row => {
+        const val = row[col];
+        return typeof val === 'number' ? val : typeof val === 'string' ? Number(val) : NaN;
+      })
+      .filter(val => !isNaN(val)); // Filter out NaN values
+    
+    // Calculate basic statistics
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    const mean = sum / values.length;
+    
+    // Sort values for median calculation
+    const sortedValues = [...values].sort((a, b) => a - b);
+    const median = values.length % 2 === 0
+      ? (sortedValues[values.length / 2 - 1] + sortedValues[values.length / 2]) / 2
+      : sortedValues[Math.floor(values.length / 2)];
+    
+    // Calculate standard deviation
+    const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+    const avgSquaredDiff = squaredDiffs.reduce((acc, val) => acc + val, 0) / values.length;
+    const standardDeviation = Math.sqrt(avgSquaredDiff);
+    
+    return {
+      name: col,
+      min,
+      max,
+      mean,
+      median,
+      standardDeviation
+    };
+  });
+  
+  // Calculate correlations between numeric columns
+  const correlations = [];
+  
+  for (let i = 0; i < numericColumns.length; i++) {
+    for (let j = i + 1; j < numericColumns.length; j++) {
+      const col1 = numericColumns[i];
+      const col2 = numericColumns[j];
+      
+      // Get paired values (exclude rows where either value is missing or NaN)
+      const paired = data
+        .map(row => ({
+          x: typeof row[col1] === 'number' ? row[col1] : Number(row[col1]),
+          y: typeof row[col2] === 'number' ? row[col2] : Number(row[col2])
+        }))
+        .filter(pair => !isNaN(pair.x) && !isNaN(pair.y));
+      
+      if (paired.length > 5) { // Only calculate correlation if we have enough data points
+        // Calculate means
+        const meanX = paired.reduce((sum, pair) => sum + pair.x, 0) / paired.length;
+        const meanY = paired.reduce((sum, pair) => sum + pair.y, 0) / paired.length;
+        
+        // Calculate correlation coefficient
+        let numerator = 0;
+        let denomX = 0;
+        let denomY = 0;
+        
+        for (const pair of paired) {
+          const diffX = pair.x - meanX;
+          const diffY = pair.y - meanY;
+          numerator += diffX * diffY;
+          denomX += diffX * diffX;
+          denomY += diffY * diffY;
+        }
+        
+        const correlation = numerator / (Math.sqrt(denomX) * Math.sqrt(denomY));
+        
+        // Only add significant correlations
+        if (!isNaN(correlation) && Math.abs(correlation) > 0.3) {
+          correlations.push({
+            column1: col1,
+            column2: col2,
+            value: correlation
+          });
+        }
+      }
+    }
+  }
+  
+  return {
+    numericColumns: columnStats,
+    correlations
+  };
+};
+
 export const prepareDataForPDF = (
   data: DataRow[],
   visualizations: any[],
-  summary: DataSummary
+  summary: DataSummary,
+  mathStats: MathStats | null
 ) => {
   // Enhanced PDF data preparation
   return {
     data,
     visualizations,
     summary,
+    mathStats,
     timestamp: new Date().toISOString(),
   };
 };

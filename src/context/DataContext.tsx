@@ -38,6 +38,26 @@ interface DataContextProps {
   selectedVizTypes: VisualizationType[];
   setSelectedVizTypes: (types: VisualizationType[]) => void;
   allVizTypes: VisualizationType[];
+  chartTypeSelection: VisualizationType[];
+  setChartTypeSelection: (types: VisualizationType[]) => void;
+  mathStats: MathStats | null;
+  setMathStats: (stats: MathStats | null) => void;
+}
+
+export interface MathStats {
+  numericColumns: {
+    name: string;
+    min: number;
+    max: number;
+    mean: number;
+    median: number;
+    standardDeviation: number;
+  }[];
+  correlations: {
+    column1: string;
+    column2: string;
+    value: number;
+  }[];
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -55,6 +75,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedVizTypes, setSelectedVizTypes] = useState<VisualizationType[]>([
     "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
   ]);
+  const [chartTypeSelection, setChartTypeSelection] = useState<VisualizationType[]>([]);
+  const [mathStats, setMathStats] = useState<MathStats | null>(null);
   
   const allVizTypes: VisualizationType[] = [
     "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
@@ -103,17 +125,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setFileName("data");
     setDataSummary(null);
     setRecommendedVisualizations([]);
+    setChartTypeSelection([]);
+    setMathStats(null);
   };
 
   const generateAllVisualizations = () => {
-    // Filter recommended visualizations by the selected types
-    const filteredViz = recommendedVisualizations.filter(viz => 
-      selectedVizTypes.includes(viz.type)
-    );
-    
-    // Limit to prevent overwhelming with too many charts
-    const allViz = [...filteredViz.slice(0, 20)]; 
-    setVisualizations(allViz);
+    if (!chartTypeSelection || chartTypeSelection.length === 0) {
+      // If no specific chart types selected, use the selected types from the filter
+      const filteredViz = recommendedVisualizations.filter(viz => 
+        selectedVizTypes.includes(viz.type)
+      );
+      setVisualizations(filteredViz.slice(0, 20));
+    } else {
+      // Use only the chart types that the user specifically selected
+      const filteredViz = recommendedVisualizations.filter(viz => 
+        chartTypeSelection.includes(viz.type)
+      );
+      setVisualizations(filteredViz.slice(0, 20));
+    }
   };
 
   return (
@@ -137,6 +166,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         selectedVizTypes,
         setSelectedVizTypes,
         allVizTypes,
+        chartTypeSelection,
+        setChartTypeSelection,
+        mathStats,
+        setMathStats
       }}
     >
       {children}

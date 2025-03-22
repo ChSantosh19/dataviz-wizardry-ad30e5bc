@@ -12,12 +12,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, FileUpIcon, PencilRuler, BarChart, RefreshCw, ListFilter } from 'lucide-react';
 
 const DataControls = () => {
-  const { data, clearData, dataSummary } = useData();
+  const { data, clearData } = useData();
   const [activeTab, setActiveTab] = useState<string>("summary");
   const visualizationRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="container mx-auto px-4 max-w-5xl">
+    <div className="container mx-auto px-4 max-w-6xl">
       {data.length > 0 ? (
         <div className="animate-fade-in">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 mt-2 space-y-4 md:space-y-0">
