@@ -30,7 +30,7 @@ const FileUpload: React.FC = () => {
   
   const form = useForm({
     defaultValues: {
-      chartTypes: [] as VisualizationType[],
+      chartTypes: allVizTypes as VisualizationType[],
     },
   });
 
@@ -77,6 +77,8 @@ const FileUpload: React.FC = () => {
       }
       
       const { data: processedData, summary } = result;
+      console.log("Processed data sample:", processedData.slice(0, 3));
+      console.log("Data summary:", summary);
       
       // Calculate mathematical statistics
       console.log("Calculating math stats");
@@ -97,6 +99,7 @@ const FileUpload: React.FC = () => {
         variant: "destructive",
       });
       setIsLoading(false);
+      setProcessingFile(false);
     } finally {
       setProcessingFile(false);
     }
@@ -111,7 +114,13 @@ const FileUpload: React.FC = () => {
       // Update context with processed data
       setData(processedData.data);
       setDataSummary(processedData.summary);
-      setChartTypeSelection(selectedChartTypes);
+      
+      if (selectedChartTypes.length > 0) {
+        setChartTypeSelection(selectedChartTypes);
+      } else {
+        // If no chart types were selected, use all available types
+        setChartTypeSelection(allVizTypes);
+      }
       
       // Close dialog
       setShowChartDialog(false);
@@ -121,11 +130,11 @@ const FileUpload: React.FC = () => {
         description: `Loaded ${processedData.data.length} rows of data with ${Object.keys(processedData.data[0] || {}).length} columns`,
       });
       
-      // Generate visualizations after a short delay
+      // Generate visualizations after a short delay to ensure state updates
       setTimeout(() => {
         console.log("Calling generateAllVisualizations");
         generateAllVisualizations();
-      }, 500);
+      }, 1000);
     } catch (error) {
       console.error("Error finalizing data processing:", error);
       toast({
@@ -149,6 +158,15 @@ const FileUpload: React.FC = () => {
 
   const removeFile = () => {
     setCurrentFile(null);
+  };
+
+  // Pre-select all chart types by default
+  const handleCheckAll = (checked: boolean) => {
+    if (checked) {
+      form.setValue('chartTypes', allVizTypes);
+    } else {
+      form.setValue('chartTypes', []);
+    }
   };
 
   return (
@@ -232,7 +250,7 @@ const FileUpload: React.FC = () => {
       <Dialog open={showChartDialog} onOpenChange={(open) => {
         if (!open && processedData) {
           // If dialog is closed without selecting, use all chart types
-          finalizeDataProcessing(allVizTypes);
+          finalizeDataProcessing(form.getValues().chartTypes);
         }
         setShowChartDialog(open);
       }}>
@@ -246,11 +264,23 @@ const FileUpload: React.FC = () => {
               Select which types of charts you'd like to generate from your data:
             </p>
             
+            <div className="flex items-center mb-4">
+              <Checkbox 
+                id="select-all"
+                checked={form.getValues().chartTypes.length === allVizTypes.length}
+                onCheckedChange={handleCheckAll}
+              />
+              <Label htmlFor="select-all" className="ml-2 font-medium">
+                Select All Chart Types
+              </Label>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               {allVizTypes.map((type) => (
                 <div key={type} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`chart-type-${type}`}
+                    checked={form.getValues().chartTypes.includes(type)}
                     onCheckedChange={(checked) => {
                       const currentTypes = form.getValues().chartTypes;
                       if (checked) {

@@ -87,6 +87,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     if (data.length > 0) {
       const firstRow = data[0];
       setColumns(Object.keys(firstRow));
+      console.log("Updated columns:", Object.keys(firstRow));
     } else {
       setColumns([]);
     }
@@ -95,6 +96,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   // Update recommended visualizations when data summary changes
   useEffect(() => {
     if (dataSummary) {
+      console.log("Data summary received:", dataSummary);
       const vizConfigs = dataSummary.recommendedVisualizations?.map(rec => ({
         type: rec.type as VisualizationType,
         title: rec.title,
@@ -106,11 +108,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         description: rec.description
       })) || [];
       
+      console.log("Setting recommended visualizations:", vizConfigs);
       setRecommendedVisualizations(vizConfigs);
     } else {
       setRecommendedVisualizations([]);
     }
   }, [dataSummary]);
+
+  // Auto-generate visualizations when chart types are selected
+  useEffect(() => {
+    if (chartTypeSelection && chartTypeSelection.length > 0 && recommendedVisualizations.length > 0) {
+      console.log("Auto-generating visualizations with chart types:", chartTypeSelection);
+      generateAllVisualizations();
+    }
+  }, [chartTypeSelection, recommendedVisualizations]);
 
   const addVisualization = (config: VisualizationConfig) => {
     setVisualizations((prev) => [...prev, config]);
