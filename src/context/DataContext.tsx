@@ -35,29 +35,6 @@ interface DataContextProps {
   setDataSummary: (summary: DataSummary | null) => void;
   recommendedVisualizations: VisualizationConfig[];
   generateAllVisualizations: () => void;
-  selectedVizTypes: VisualizationType[];
-  setSelectedVizTypes: (types: VisualizationType[]) => void;
-  allVizTypes: VisualizationType[];
-  chartTypeSelection: VisualizationType[];
-  setChartTypeSelection: (types: VisualizationType[]) => void;
-  mathStats: MathStats | null;
-  setMathStats: (stats: MathStats | null) => void;
-}
-
-export interface MathStats {
-  numericColumns: {
-    name: string;
-    min: number;
-    max: number;
-    mean: number;
-    median: number;
-    standardDeviation: number;
-  }[];
-  correlations: {
-    column1: string;
-    column2: string;
-    value: number;
-  }[];
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -72,22 +49,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [fileName, setFileName] = useState<string>("data");
   const [dataSummary, setDataSummary] = useState<DataSummary | null>(null);
   const [recommendedVisualizations, setRecommendedVisualizations] = useState<VisualizationConfig[]>([]);
-  const [selectedVizTypes, setSelectedVizTypes] = useState<VisualizationType[]>([
-    "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
-  ]);
-  const [chartTypeSelection, setChartTypeSelection] = useState<VisualizationType[]>([]);
-  const [mathStats, setMathStats] = useState<MathStats | null>(null);
-  
-  const allVizTypes: VisualizationType[] = [
-    "bar", "line", "pie", "scatter", "area", "radar", "heatmap", "histogram"
-  ];
 
   // Update columns when data changes
   useEffect(() => {
     if (data.length > 0) {
       const firstRow = data[0];
       setColumns(Object.keys(firstRow));
-      console.log("Updated columns:", Object.keys(firstRow));
     } else {
       setColumns([]);
     }
@@ -95,9 +62,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Update recommended visualizations when data summary changes
   useEffect(() => {
-    if (dataSummary) {
-      console.log("Data summary received:", dataSummary);
-      const vizConfigs = dataSummary.recommendedVisualizations?.map(rec => ({
+    if (dataSummary?.recommendedVisualizations) {
+      const vizConfigs = dataSummary.recommendedVisualizations.map(rec => ({
         type: rec.type as VisualizationType,
         title: rec.title,
         xAxis: rec.xAxis,
@@ -106,22 +72,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         categoryField: rec.categoryField,
         strength: rec.strength,
         description: rec.description
-      })) || [];
-      
-      console.log("Setting recommended visualizations:", vizConfigs);
+      }));
       setRecommendedVisualizations(vizConfigs);
     } else {
       setRecommendedVisualizations([]);
     }
   }, [dataSummary]);
-
-  // Auto-generate visualizations when chart types are selected
-  useEffect(() => {
-    if (chartTypeSelection && chartTypeSelection.length > 0 && recommendedVisualizations.length > 0) {
-      console.log("Auto-generating visualizations with chart types:", chartTypeSelection);
-      generateAllVisualizations();
-    }
-  }, [chartTypeSelection, recommendedVisualizations]);
 
   const addVisualization = (config: VisualizationConfig) => {
     setVisualizations((prev) => [...prev, config]);
@@ -137,35 +93,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setFileName("data");
     setDataSummary(null);
     setRecommendedVisualizations([]);
-    setChartTypeSelection([]);
-    setMathStats(null);
   };
 
   const generateAllVisualizations = () => {
-    try {
-      console.log("Generating visualizations with chart types:", chartTypeSelection);
-      console.log("Recommended visualizations:", recommendedVisualizations);
-      
-      if (!chartTypeSelection || chartTypeSelection.length === 0) {
-        // If no specific chart types selected, use the selected types from the filter
-        const filteredViz = recommendedVisualizations.filter(viz => 
-          selectedVizTypes.includes(viz.type)
-        );
-        console.log("Using selected viz types filter:", selectedVizTypes);
-        console.log("Filtered visualizations:", filteredViz);
-        setVisualizations(filteredViz.slice(0, 20));
-      } else {
-        // Use only the chart types that the user specifically selected
-        const filteredViz = recommendedVisualizations.filter(viz => 
-          chartTypeSelection.includes(viz.type)
-        );
-        console.log("Using chart type selection:", chartTypeSelection);
-        console.log("Filtered visualizations:", filteredViz);
-        setVisualizations(filteredViz.slice(0, 20));
-      }
-    } catch (error) {
-      console.error("Error generating visualizations:", error);
-    }
+    // Add all recommended visualizations at once
+    // This ensures we generate all possible combinations without user selection
+    // Limit to prevent overwhelming with too many charts
+    const allViz = [...recommendedVisualizations.slice(0, 20)]; 
+    setVisualizations(allViz);
   };
 
   return (
@@ -186,13 +121,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         setDataSummary,
         recommendedVisualizations,
         generateAllVisualizations,
-        selectedVizTypes,
-        setSelectedVizTypes,
-        allVizTypes,
-        chartTypeSelection,
-        setChartTypeSelection,
-        mathStats,
-        setMathStats
       }}
     >
       {children}

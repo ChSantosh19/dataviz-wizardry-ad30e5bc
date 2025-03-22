@@ -1,19 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData, VisualizationType, VisualizationConfig } from '../context/DataContext';
 import { 
   BarChart, Bar, LineChart, Line, PieChart, Pie, 
   AreaChart, Area, RadarChart, Radar, PolarGrid, 
   PolarAngleAxis, PolarRadiusAxis, Cell, 
-  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ScatterChart, Scatter, ZAxis, ReferenceLine
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Layers, Trash2, Download, BarChart as BarChartIcon,
-  PieChart as PieChartIcon, LineChart as LineChartIcon,
-  ScatterChart as ScatterChartIcon, Activity,
-  FileBarChart2, Grid3X3, Radar as RadarIcon
+  Layers, Trash2, Download, PlusCircle, BarChart as BarChartIcon
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -63,10 +61,6 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
 
     const { type, xAxis, yAxis, valueField, categoryField } = config;
     
-    // Larger chart height and no grid
-    const chartHeight = 650;
-    const chartMargin = { top: 40, right: 40, left: 50, bottom: 80 };
-    
     if (type === 'pie' && valueField && categoryField) {
       // Process data for pie chart
       const processedData = data.reduce((acc, row) => {
@@ -91,7 +85,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <PieChart>
             <Pie
               data={sortedData}
@@ -99,7 +93,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               cy="50%"
               labelLine={true}
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={240}
+              outerRadius={120}
               fill="#8884d8"
               dataKey="value"
               animationDuration={800}
@@ -135,18 +129,19 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       }
       
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <BarChart
             data={chartData}
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={80}
             />
             <YAxis />
             <Tooltip />
@@ -157,13 +152,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               animationDuration={800}
               animationBegin={100}
               animationEasing="ease-out"
-              barSize={50}
-              radius={[6, 6, 0, 0]}
-            >
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Bar>
+              barSize={40}
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -171,18 +162,19 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'line' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <LineChart
             data={data}
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={80}
             />
             <YAxis />
             <Tooltip />
@@ -192,7 +184,6 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               dataKey={yAxis} 
               stroke="#3B82F6" 
               strokeWidth={3}
-              dot={{ strokeWidth: 2, r: 5 }}
               activeDot={{ r: 8 }}
               animationDuration={800}
               animationBegin={100}
@@ -205,18 +196,19 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'area' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <AreaChart
             data={data}
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={80}
             />
             <YAxis />
             <Tooltip />
@@ -238,10 +230,11 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     
     if (type === 'scatter' && xAxis && yAxis) {
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <ScatterChart
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey={xAxis} 
               name={xAxis} 
@@ -254,7 +247,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               type="number"
               label={{ value: yAxis, angle: -90, position: 'insideLeft' }}
             />
-            <ZAxis range={[80, 200]} />
+            <ZAxis range={[80, 80]} />
             <Tooltip cursor={{ strokeDasharray: '3 3' }} />
             <Legend />
             <Scatter 
@@ -263,11 +256,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               fill="#8884d8"
               shape="circle"
               animationDuration={800}
-            >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Scatter>
+            />
             {/* Add a regression line if correlation is significant */}
             {config.strength && config.strength > 0.5 && (
               <ReferenceLine 
@@ -308,9 +297,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
         .slice(0, 8);
       
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
-          <RadarChart cx="50%" cy="50%" outerRadius={240} data={sortedData}>
-            <PolarGrid gridType="polygon" />
+        <ResponsiveContainer width="100%" height={400}>
+          <RadarChart cx="50%" cy="50%" outerRadius={120} data={sortedData}>
+            <PolarGrid stroke="#888" />
             <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
             <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
             <Radar 
@@ -353,18 +342,19 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       });
       
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <BarChart
             data={histogramData}
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="bin" 
               tick={{ fontSize: 10 }}
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={80}
             />
             <YAxis label={{ value: 'Frequency', angle: -90, position: 'insideLeft' }} />
             <Tooltip 
@@ -388,6 +378,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       );
     }
     
+    // Heatmap for correlations between numeric columns
     if (type === 'heatmap' && xAxis && yAxis) {
       // Process data for heatmap
       const uniqueXValues = [...new Set(data.map(d => String(d[xAxis])))];
@@ -422,10 +413,11 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       const valueRange = maxValue - minValue;
       
       return (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height={400}>
           <ScatterChart
-            margin={chartMargin}
+            margin={{ top: 20, right: 30, left: 30, bottom: 30 }}
           >
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="x" 
               type="category"
@@ -434,7 +426,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               interval={0}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={80}
             />
             <YAxis 
               dataKey="y" 
@@ -443,7 +435,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               width={100}
             />
             <Tooltip 
-              cursor={false}
+              cursor={{ strokeDasharray: '3 3' }}
               formatter={(value) => [`${value}`, valueField || 'Count']}
             />
             <Scatter 
@@ -474,7 +466,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
             </Scatter>
             <ZAxis 
               dataKey="value" 
-              range={[80, 200]}
+              range={[30, 80]}
               name={valueField || 'Count'}
             />
           </ScatterChart>
@@ -489,29 +481,12 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
     );
   };
 
-  const getChartIcon = () => {
-    switch (config.type) {
-      case 'bar': return <BarChartIcon className="h-5 w-5 text-primary" />;
-      case 'line': return <LineChartIcon className="h-5 w-5 text-primary" />;
-      case 'pie': return <PieChartIcon className="h-5 w-5 text-primary" />;
-      case 'scatter': return <ScatterChartIcon className="h-5 w-5 text-primary" />;
-      case 'area': return <Activity className="h-5 w-5 text-primary" />;
-      case 'heatmap': return <Grid3X3 className="h-5 w-5 text-primary" />;
-      case 'histogram': return <FileBarChart2 className="h-5 w-5 text-primary" />;
-      case 'radar': return <RadarIcon className="h-5 w-5 text-primary" />;
-      default: return <BarChartIcon className="h-5 w-5 text-primary" />;
-    }
-  };
-
   return (
-    <Card className="chart-container animate-scale shadow-md border border-border/30 bg-gradient-to-br from-card to-card/90" id={`chart-${index}`}>
-      <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between space-y-0 border-b bg-card/60">
-        <div className="flex items-center gap-2">
-          {getChartIcon()}
-          <CardTitle className="text-xl font-medium">{config.title}</CardTitle>
-        </div>
+    <Card className="chart-container animate-scale" id={`chart-${index}`}>
+      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-xl font-medium card-title">{config.title}</CardTitle>
         <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="text-xs font-medium px-2 py-1 bg-primary/10">{config.type}</Badge>
+          <Badge variant="outline">{config.type}</Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -532,7 +507,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-6">
+      <CardContent className="p-6">
         {config.description && (
           <p className="text-muted-foreground text-sm mb-4">{config.description}</p>
         )}
@@ -543,7 +518,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
 };
 
 const Visualizations: React.FC = () => {
-  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations, chartTypeSelection } = useData();
+  const { data, visualizations, removeVisualization, recommendedVisualizations, generateAllVisualizations } = useData();
   const [autoGenerated, setAutoGenerated] = useState(false);
 
   useEffect(() => {
@@ -551,14 +526,18 @@ const Visualizations: React.FC = () => {
     setAutoGenerated(false);
   }, [data]);
 
-  // Debug logging to understand what's happening
-  useEffect(() => {
-    console.log("Visualizations component renders");
-    console.log("- Data length:", data.length);
-    console.log("- Visualizations:", visualizations);
-    console.log("- Chart types selected:", chartTypeSelection);
-    console.log("- Recommended visualizations:", recommendedVisualizations);
-  }, [data, visualizations, chartTypeSelection, recommendedVisualizations]);
+  // Auto-generate visualizations when data is available
+  const handleAutoGenerate = () => {
+    if (!autoGenerated && recommendedVisualizations.length > 0) {
+      generateAllVisualizations();
+      setAutoGenerated(true);
+      
+      toast({
+        title: "Visualizations generated",
+        description: `Created ${recommendedVisualizations.length} visualizations based on your data`,
+      });
+    }
+  };
 
   if (!data.length) {
     return (
@@ -569,9 +548,31 @@ const Visualizations: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      {recommendedVisualizations.length > 0 && !autoGenerated && (
+        <Card className="border border-border/20 shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-lg font-medium">Data Visualization</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <p className="mb-4 text-muted-foreground">
+              We've analyzed your data and found {recommendedVisualizations.length} potential visualizations.
+              Click the button below to generate all of them automatically.
+            </p>
+            <Button 
+              className="w-full mt-2 flex items-center space-x-2" 
+              onClick={handleAutoGenerate}
+              size="lg"
+            >
+              <BarChartIcon className="h-5 w-5 mr-2" />
+              Generate All Visualizations
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      
       {visualizations.length > 0 ? (
-        <div className="grid grid-cols-1 gap-10 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           {visualizations.map((config, index) => (
             <ChartContainer
               key={index}
@@ -583,23 +584,19 @@ const Visualizations: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-border rounded-lg bg-background">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4 animate-pulse-slow">
-            <Layers className="h-8 w-8 text-primary" />
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <PlusCircle className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-lg font-medium mb-2">No visualizations yet</h3>
           <p className="text-muted-foreground max-w-md mb-6">
             {recommendedVisualizations.length > 0 
-              ? "Select chart types to generate visualizations based on your data."
+              ? "Click the 'Generate All Visualizations' button above to automatically create charts based on your data."
               : "Upload data first to generate visualizations automatically."}
           </p>
           {recommendedVisualizations.length > 0 && (
             <Button 
-              onClick={() => {
-                console.log("Generate button clicked");
-                generateAllVisualizations();
-                setAutoGenerated(true);
-              }}
-              className="flex items-center space-x-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
+              onClick={handleAutoGenerate}
+              className="flex items-center space-x-2"
               size="lg"
             >
               <Layers className="h-5 w-5 mr-2" />
