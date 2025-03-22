@@ -97,12 +97,17 @@ const DataControls = () => {
 
 const Hero = () => {
   return (
-    <div className="relative overflow-hidden py-24 before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-b before:from-background/60 before:to-background before:z-10">
-      <div className="absolute top-0 left-0 right-0 h-[600px] bg-gradient-radial from-primary/5 to-transparent opacity-70"></div>
+    <div className="relative overflow-hidden py-24">
+      {/* Animated background elements */}
+      <div className="absolute top-0 left-0 right-0 h-[600px] opacity-80 z-0">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "0s" }}></div>
+        <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full bg-blue-400/10 animate-float" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-56 h-56 rounded-full bg-purple-400/10 animate-float" style={{ animationDelay: "2s" }}></div>
+      </div>
       
       <div className="container relative z-20 mx-auto px-4 max-w-5xl text-center space-y-8">
         <div className="animate-slide-down">
-          <div className="inline-block mb-3 px-3 py-1 bg-primary/10 rounded-full">
+          <div className="inline-block mb-3 px-3 py-1 bg-primary/10 rounded-full backdrop-blur-sm">
             <span className="text-xs font-medium text-primary">Interactive Data Visualization</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
@@ -117,7 +122,7 @@ const Hero = () => {
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in">
           <Button
             size="lg"
-            className="group px-6 py-7 text-lg rounded-full"
+            className="group px-6 py-7 text-lg rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
             onClick={() => document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Get Started
@@ -127,8 +132,8 @@ const Hero = () => {
         
         <div className="flex justify-center mt-12 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/10 shadow-sm">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/20 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-card/40">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
                 <FileUpIcon className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-lg font-medium mb-2">Excel Upload</h3>
@@ -137,8 +142,8 @@ const Hero = () => {
               </p>
             </div>
             
-            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/10 shadow-sm">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/20 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-card/40">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
                 <PencilRuler className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-lg font-medium mb-2">Manual Input</h3>
@@ -147,8 +152,8 @@ const Hero = () => {
               </p>
             </div>
             
-            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/10 shadow-sm">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card/30 backdrop-blur-sm p-6 rounded-xl border border-border/20 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-card/40">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
                 <BarChart className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-lg font-medium mb-2">PDF Export</h3>

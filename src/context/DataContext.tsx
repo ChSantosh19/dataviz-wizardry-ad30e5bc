@@ -94,8 +94,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Update recommended visualizations when data summary changes
   useEffect(() => {
-    if (dataSummary?.recommendedVisualizations) {
-      const vizConfigs = dataSummary.recommendedVisualizations.map(rec => ({
+    if (dataSummary) {
+      const vizConfigs = dataSummary.recommendedVisualizations?.map(rec => ({
         type: rec.type as VisualizationType,
         title: rec.title,
         xAxis: rec.xAxis,
@@ -104,7 +104,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         categoryField: rec.categoryField,
         strength: rec.strength,
         description: rec.description
-      }));
+      })) || [];
+      
       setRecommendedVisualizations(vizConfigs);
     } else {
       setRecommendedVisualizations([]);

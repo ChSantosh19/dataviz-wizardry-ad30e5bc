@@ -5,7 +5,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, 
   AreaChart, Area, RadarChart, Radar, PolarGrid, 
   PolarAngleAxis, PolarRadiusAxis, Cell, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   ScatterChart, Scatter, ZAxis, ReferenceLine
 } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -64,9 +64,9 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
 
     const { type, xAxis, yAxis, valueField, categoryField } = config;
     
-    // Common chart settings to remove grid lines and increase size
-    const chartMargin = { top: 30, right: 30, left: 40, bottom: 60 };
-    const chartHeight = 600; // Larger chart height
+    // Larger chart height and no grid
+    const chartHeight = 650;
+    const chartMargin = { top: 40, right: 40, left: 50, bottom: 80 };
     
     if (type === 'pie' && valueField && categoryField) {
       // Process data for pie chart
@@ -100,7 +100,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               cy="50%"
               labelLine={true}
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={220}
+              outerRadius={240}
               fill="#8884d8"
               dataKey="value"
               animationDuration={800}
@@ -158,9 +158,13 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               animationDuration={800}
               animationBegin={100}
               animationEasing="ease-out"
-              barSize={40}
-              radius={[4, 4, 0, 0]}
-            />
+              barSize={50}
+              radius={[6, 6, 0, 0]}
+            >
+              {chartData.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       );
@@ -189,7 +193,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               dataKey={yAxis} 
               stroke="#3B82F6" 
               strokeWidth={3}
-              dot={{ strokeWidth: 2, r: 4 }}
+              dot={{ strokeWidth: 2, r: 5 }}
               activeDot={{ r: 8 }}
               animationDuration={800}
               animationBegin={100}
@@ -260,7 +264,11 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
               fill="#8884d8"
               shape="circle"
               animationDuration={800}
-            />
+            >
+              {data.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Scatter>
             {/* Add a regression line if correlation is significant */}
             {config.strength && config.strength > 0.5 && (
               <ReferenceLine 
@@ -302,8 +310,8 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
       
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <RadarChart cx="50%" cy="50%" outerRadius={220} data={sortedData}>
-            <PolarGrid stroke="#eaeaea" />
+          <RadarChart cx="50%" cy="50%" outerRadius={240} data={sortedData}>
+            <PolarGrid gridType="polygon" />
             <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
             <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
             <Radar 
@@ -498,14 +506,14 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
   };
 
   return (
-    <Card className="chart-container animate-scale shadow-md" id={`chart-${index}`}>
-      <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between space-y-0 border-b">
+    <Card className="chart-container animate-scale shadow-md border border-border/30 bg-gradient-to-br from-card to-card/90" id={`chart-${index}`}>
+      <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between space-y-0 border-b bg-card/60">
         <div className="flex items-center gap-2">
           {getChartIcon()}
           <CardTitle className="text-xl font-medium">{config.title}</CardTitle>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="text-xs font-medium px-2 py-1">{config.type}</Badge>
+          <Badge variant="outline" className="text-xs font-medium px-2 py-1 bg-primary/10">{config.type}</Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -526,7 +534,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ config, index, onRemove
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-2 pt-4">
+      <CardContent className="p-4 pt-6">
         {config.description && (
           <p className="text-muted-foreground text-sm mb-4">{config.description}</p>
         )}
@@ -563,9 +571,9 @@ const Visualizations: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {visualizations.length > 0 ? (
-        <div className="grid grid-cols-1 gap-8 mt-8">
+        <div className="grid grid-cols-1 gap-10 mt-8">
           {visualizations.map((config, index) => (
             <ChartContainer
               key={index}
@@ -577,7 +585,7 @@ const Visualizations: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-border rounded-lg bg-background">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4 animate-pulse-slow">
             <Layers className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-lg font-medium mb-2">No visualizations yet</h3>
@@ -592,7 +600,7 @@ const Visualizations: React.FC = () => {
                 generateAllVisualizations();
                 setAutoGenerated(true);
               }}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
               size="lg"
             >
               <Layers className="h-5 w-5 mr-2" />
