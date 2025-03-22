@@ -98,11 +98,12 @@ const DataControls = () => {
 const Hero = () => {
   return (
     <div className="relative overflow-hidden py-24">
-      {/* Animated background elements */}
-      <div className="absolute top-0 left-0 right-0 h-[600px] opacity-80 z-0">
+      {/* Enhanced animated background elements */}
+      <div className="absolute top-0 left-0 right-0 h-[600px] opacity-90 z-0">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/10 animate-float" style={{ animationDelay: "0s" }}></div>
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full bg-blue-400/10 animate-float" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-56 h-56 rounded-full bg-purple-400/10 animate-float" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full bg-blue-400/10 animate-float-delayed" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-56 h-56 rounded-full bg-purple-400/10 animate-float-delayed-more" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-1/2 right-1/3 w-40 h-40 rounded-full bg-green-400/10 animate-float" style={{ animationDelay: "3s" }}></div>
       </div>
       
       <div className="container relative z-20 mx-auto px-4 max-w-5xl text-center space-y-8">

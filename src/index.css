@@ -86,10 +86,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(300deg, rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.05), rgba(249, 115, 22, 0.05), rgba(139, 92, 246, 0.05));
+    background: linear-gradient(300deg, rgba(59, 130, 246, 0.07), rgba(16, 185, 129, 0.07), rgba(249, 115, 22, 0.07), rgba(139, 92, 246, 0.07));
     background-size: 400% 400%;
     z-index: -1;
-    animation: gradient-animation 15s ease infinite;
+    animation: gradient-animation 25s ease infinite;
   }
 
   html {
@@ -126,6 +126,7 @@
 /* Specific Component Styles */
 .chart-container {
   @apply relative overflow-hidden rounded-xl p-4 transition-all duration-300;
+  min-height: 380px;
 }
 
 .chart-container:hover {
@@ -191,8 +192,9 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
 }
 
 .animate-pulse-slow {
@@ -201,4 +203,34 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-float-delayed-more {
+  animation: float 7s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(200, 200, 200, 0.1) !important; /* Lighter, barely visible grid lines */
+}
+
+/* Remove grid lines completely if preferred */
+.recharts-wrapper .recharts-cartesian-grid line {
+  display: none;
+}
+
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+/* Increase chart size */
+.recharts-responsive-container {
+  min-height: 400px !important;
+  height: 100% !important;
 }

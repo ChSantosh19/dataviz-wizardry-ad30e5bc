@@ -131,18 +131,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const generateAllVisualizations = () => {
-    if (!chartTypeSelection || chartTypeSelection.length === 0) {
-      // If no specific chart types selected, use the selected types from the filter
-      const filteredViz = recommendedVisualizations.filter(viz => 
-        selectedVizTypes.includes(viz.type)
-      );
-      setVisualizations(filteredViz.slice(0, 20));
-    } else {
-      // Use only the chart types that the user specifically selected
-      const filteredViz = recommendedVisualizations.filter(viz => 
-        chartTypeSelection.includes(viz.type)
-      );
-      setVisualizations(filteredViz.slice(0, 20));
+    try {
+      console.log("Generating visualizations with chart types:", chartTypeSelection);
+      console.log("Recommended visualizations:", recommendedVisualizations);
+      
+      if (!chartTypeSelection || chartTypeSelection.length === 0) {
+        // If no specific chart types selected, use the selected types from the filter
+        const filteredViz = recommendedVisualizations.filter(viz => 
+          selectedVizTypes.includes(viz.type)
+        );
+        console.log("Using selected viz types filter:", selectedVizTypes);
+        console.log("Filtered visualizations:", filteredViz);
+        setVisualizations(filteredViz.slice(0, 20));
+      } else {
+        // Use only the chart types that the user specifically selected
+        const filteredViz = recommendedVisualizations.filter(viz => 
+          chartTypeSelection.includes(viz.type)
+        );
+        console.log("Using chart type selection:", chartTypeSelection);
+        console.log("Filtered visualizations:", filteredViz);
+        setVisualizations(filteredViz.slice(0, 20));
+      }
+    } catch (error) {
+      console.error("Error generating visualizations:", error);
     }
   };
 

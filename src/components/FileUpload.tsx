@@ -3,12 +3,11 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Loader2, FileSpreadsheet, BarChart, PieChart, LineChart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { processFile } from '../utils/dataProcessor';
+import { processFile, calculateMathStats } from '../utils/dataProcessor';
 import { useData, VisualizationType } from '../context/DataContext';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { calculateMathStats } from '../utils/dataProcessor';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
@@ -69,11 +68,21 @@ const FileUpload: React.FC = () => {
     setProcessingFile(true);
     
     try {
-      const { data: processedData, summary } = await processFile(currentFile);
+      console.log("Processing file:", currentFile.name);
+      const result = await processFile(currentFile);
+      console.log("Process file result:", result);
+      
+      if (!result || !result.data || !result.data.length) {
+        throw new Error("No data was found in the file");
+      }
+      
+      const { data: processedData, summary } = result;
       
       // Calculate mathematical statistics
+      console.log("Calculating math stats");
       const mathStats = calculateMathStats(processedData);
       setMathStats(mathStats);
+      console.log("Math stats:", mathStats);
       
       // Store processed data temporarily
       setProcessedData({ data: processedData, summary });
@@ -87,6 +96,7 @@ const FileUpload: React.FC = () => {
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
+      setIsLoading(false);
     } finally {
       setProcessingFile(false);
     }
@@ -96,6 +106,8 @@ const FileUpload: React.FC = () => {
     if (!processedData) return;
     
     try {
+      console.log("Finalizing data processing with chart types:", selectedChartTypes);
+      
       // Update context with processed data
       setData(processedData.data);
       setDataSummary(processedData.summary);
@@ -111,6 +123,7 @@ const FileUpload: React.FC = () => {
       
       // Generate visualizations after a short delay
       setTimeout(() => {
+        console.log("Calling generateAllVisualizations");
         generateAllVisualizations();
       }, 500);
     } catch (error) {
