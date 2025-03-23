@@ -35,6 +35,11 @@ interface DataContextProps {
   setDataSummary: (summary: DataSummary | null) => void;
   recommendedVisualizations: VisualizationConfig[];
   generateAllVisualizations: () => void;
+  selectedVisualizations: VisualizationConfig[];
+  setSelectedVisualizations: (visualizations: VisualizationConfig[]) => void;
+  showChartSelectionDialog: boolean;
+  setShowChartSelectionDialog: (show: boolean) => void;
+  generateSelectedVisualizations: () => void;
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -49,6 +54,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [fileName, setFileName] = useState<string>("data");
   const [dataSummary, setDataSummary] = useState<DataSummary | null>(null);
   const [recommendedVisualizations, setRecommendedVisualizations] = useState<VisualizationConfig[]>([]);
+  const [selectedVisualizations, setSelectedVisualizations] = useState<VisualizationConfig[]>([]);
+  const [showChartSelectionDialog, setShowChartSelectionDialog] = useState(false);
 
   // Update columns when data changes
   useEffect(() => {
@@ -93,14 +100,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setFileName("data");
     setDataSummary(null);
     setRecommendedVisualizations([]);
+    setSelectedVisualizations([]);
   };
 
   const generateAllVisualizations = () => {
     // Add all recommended visualizations at once
-    // This ensures we generate all possible combinations without user selection
-    // Limit to prevent overwhelming with too many charts
     const allViz = [...recommendedVisualizations.slice(0, 20)]; 
     setVisualizations(allViz);
+  };
+
+  const generateSelectedVisualizations = () => {
+    // Generate only the selected visualizations
+    if (selectedVisualizations.length > 0) {
+      setVisualizations(selectedVisualizations);
+    } else {
+      // If nothing selected, use a few recommended ones as fallback
+      setVisualizations(recommendedVisualizations.slice(0, 5));
+    }
   };
 
   return (
@@ -121,6 +137,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         setDataSummary,
         recommendedVisualizations,
         generateAllVisualizations,
+        selectedVisualizations,
+        setSelectedVisualizations,
+        showChartSelectionDialog,
+        setShowChartSelectionDialog,
+        generateSelectedVisualizations,
       }}
     >
       {children}

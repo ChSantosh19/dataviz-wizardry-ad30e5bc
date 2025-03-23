@@ -3,7 +3,6 @@ import React from 'react';
 import { useData } from '../context/DataContext';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from '@/components/ui/use-toast';
 
@@ -23,7 +22,7 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
     try {
       toast({
         title: "Preparing PDF",
-        description: "This may take a moment...",
+        description: "Creating a symmetric document layout...",
       });
       
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -31,191 +30,338 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margins = 15;
       
-      // Add title
-      pdf.setFontSize(22);
-      pdf.text(`${fileName} Visualization Report`, margins, margins + 5);
+      // Create a symmetric, visually pleasing document
       
-      // Add timestamp
-      pdf.setFontSize(10);
-      pdf.text(`Generated on: ${new Date().toLocaleString()}`, margins, margins + 12);
+      // Cover Page
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
       
-      // Add separator line
-      pdf.setDrawColor(200, 200, 200);
+      // Title with styling
+      pdf.setFontSize(28);
+      pdf.setTextColor(50, 50, 120);
+      const title = `${fileName} Report`;
+      const titleWidth = pdf.getStringUnitWidth(title) * 28 / pdf.internal.scaleFactor;
+      const titleX = (pdfWidth - titleWidth) / 2;
+      pdf.text(title, titleX, 70);
+      
+      // Subtitle
+      pdf.setFontSize(14);
+      pdf.setTextColor(90, 90, 120);
+      const subtitle = "Data Visualization Analysis";
+      const subtitleWidth = pdf.getStringUnitWidth(subtitle) * 14 / pdf.internal.scaleFactor;
+      const subtitleX = (pdfWidth - subtitleWidth) / 2;
+      pdf.text(subtitle, subtitleX, 80);
+      
+      // Date
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 120);
+      const date = `Generated on: ${new Date().toLocaleDateString()}`;
+      const dateWidth = pdf.getStringUnitWidth(date) * 12 / pdf.internal.scaleFactor;
+      const dateX = (pdfWidth - dateWidth) / 2;
+      pdf.text(date, dateX, 90);
+      
+      // Add horizontal separator
+      pdf.setDrawColor(150, 150, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margins + 20, 100, pdfWidth - margins - 20, 100);
+      
+      // Summary counts
+      pdf.setFontSize(12);
+      pdf.setTextColor(70, 70, 100);
+      const summaryText = [
+        `Total Records: ${data.length}`,
+        `Number of Columns: ${dataSummary?.columnCount || 0}`,
+        `Visualizations: ${visualizations.length}`
+      ];
+      
+      const summaryY = 115;
+      summaryText.forEach((text, i) => {
+        const textWidth = pdf.getStringUnitWidth(text) * 12 / pdf.internal.scaleFactor;
+        const textX = (pdfWidth - textWidth) / 2;
+        pdf.text(text, textX, summaryY + (i * 8));
+      });
+      
+      // Table of Contents
+      pdf.addPage();
+      
+      pdf.setFontSize(18);
+      pdf.setTextColor(50, 50, 120);
+      pdf.text("Table of Contents", margins, margins + 10);
+      
+      pdf.setDrawColor(200, 200, 230);
+      pdf.setLineWidth(0.5);
       pdf.line(margins, margins + 15, pdfWidth - margins, margins + 15);
       
-      // Data summary
-      pdf.setFontSize(14);
-      pdf.text('Data Summary', margins, margins + 25);
+      pdf.setFontSize(12);
+      pdf.setTextColor(70, 70, 100);
       
-      // Enhanced data summary section
-      pdf.setFontSize(10);
-      let summaryYOffset = margins + 32;
+      let tocY = margins + 25;
       
-      // Basic stats
-      pdf.text(`Total records: ${data.length}`, margins, summaryYOffset);
-      summaryYOffset += 6;
-      pdf.text(`Number of columns: ${dataSummary?.columnCount || 0}`, margins, summaryYOffset);
-      summaryYOffset += 6;
-      pdf.text(`Number of visualizations: ${visualizations.length}`, margins, summaryYOffset);
-      summaryYOffset += 10;
+      // Add TOC entries
+      pdf.text("1. Data Summary", margins, tocY);
+      tocY += 8;
+      pdf.text("2. Column Analysis", margins, tocY);
+      tocY += 8;
+      pdf.text("3. Visualizations", margins, tocY);
+      tocY += 8;
       
-      // Column information
-      if (dataSummary?.columns && dataSummary.columns.length > 0) {
-        pdf.setFontSize(12);
-        pdf.text('Column Types:', margins, summaryYOffset);
-        pdf.setFontSize(9);
-        summaryYOffset += 6;
+      // List each visualization in TOC
+      visualizations.forEach((viz, i) => {
+        pdf.text(`   3.${i+1}. ${viz.title}`, margins, tocY);
+        tocY += 8;
         
-        // Create a simple table for column info
-        const columnInfoTable = [];
-        columnInfoTable.push(['Column Name', 'Type', 'Unique Values', 'Missing Values']);
-        
-        dataSummary.columns.slice(0, 15).forEach(col => {
-          columnInfoTable.push([
-            col.name.substring(0, 20) + (col.name.length > 20 ? '...' : ''),
-            col.type,
-            col.uniqueValues.toString(),
-            col.missingValues.toString()
-          ]);
-        });
-        
-        const colWidths = [80, 40, 30, 30];
-        const rowHeight = 7;
-        
-        // Header row
-        pdf.setFillColor(240, 240, 240);
-        pdf.rect(margins, summaryYOffset, pdfWidth - margins * 2, rowHeight, 'F');
-        
-        let xOffset = margins;
-        for (let i = 0; i < columnInfoTable[0].length; i++) {
-          pdf.text(columnInfoTable[0][i], xOffset + 2, summaryYOffset + 5);
-          xOffset += colWidths[i];
+        // Add new page if TOC gets too long
+        if (tocY > pdfHeight - margins) {
+          pdf.addPage();
+          tocY = margins + 10;
         }
+      });
+      
+      pdf.text("4. Data Sample", margins, tocY);
+      
+      // Data Summary Page
+      pdf.addPage();
+      
+      // Page header
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(0, 0, pdfWidth, 20, 'F');
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(50, 50, 120);
+      pdf.text("1. Data Summary", margins, 15);
+      
+      let summaryPageY = 30;
+      
+      // Summary content
+      pdf.setFontSize(14);
+      pdf.setTextColor(70, 70, 100);
+      pdf.text("Overview", margins, summaryPageY);
+      summaryPageY += 8;
+      
+      pdf.setFontSize(11);
+      pdf.setTextColor(60, 60, 80);
+      pdf.text(`File Name: ${fileName}`, margins, summaryPageY);
+      summaryPageY += 7;
+      pdf.text(`Total Records: ${data.length}`, margins, summaryPageY);
+      summaryPageY += 7;
+      pdf.text(`Number of Columns: ${dataSummary?.columnCount || 0}`, margins, summaryPageY);
+      summaryPageY += 7;
+      
+      if (dataSummary?.dataQualityScore) {
+        pdf.text(`Data Quality Score: ${dataSummary.dataQualityScore.toFixed(1)}/10`, margins, summaryPageY);
+        summaryPageY += 7;
+      }
+      
+      // Column Analysis Page
+      pdf.addPage();
+      
+      // Page header
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(0, 0, pdfWidth, 20, 'F');
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(50, 50, 120);
+      pdf.text("2. Column Analysis", margins, 15);
+      
+      let colY = 30;
+      
+      // Create a table for column info
+      if (dataSummary?.columns && dataSummary.columns.length > 0) {
+        pdf.setFontSize(11);
+        pdf.setTextColor(60, 60, 80);
         
-        summaryYOffset += rowHeight;
+        // Table header
+        pdf.setFillColor(230, 230, 250);
+        pdf.rect(margins, colY, pdfWidth - margins * 2, 10, 'F');
         
-        // Data rows
-        for (let i = 1; i < columnInfoTable.length; i++) {
-          if (i % 2 === 0) {
-            pdf.setFillColor(250, 250, 250);
-            pdf.rect(margins, summaryYOffset, pdfWidth - margins * 2, rowHeight, 'F');
-          }
-          
-          xOffset = margins;
-          for (let j = 0; j < columnInfoTable[i].length; j++) {
-            pdf.text(columnInfoTable[i][j], xOffset + 2, summaryYOffset + 5);
+        const colWidths = [50, 30, 35, 35];
+        const headerLabels = ["Column Name", "Type", "Unique Values", "Missing Values"];
+        
+        pdf.setTextColor(50, 50, 120);
+        headerLabels.forEach((label, i) => {
+          let xOffset = margins;
+          for (let j = 0; j < i; j++) {
             xOffset += colWidths[j];
           }
-          
-          summaryYOffset += rowHeight;
-          
-          // Check if we need a new page
-          if (summaryYOffset > pdfHeight - margins * 2) {
-            pdf.addPage();
-            summaryYOffset = margins;
-          }
-        }
-      }
-      
-      // Add a page for visualizations
-      pdf.addPage();
-      let yOffset = margins;
-      
-      // Title for visualizations
-      pdf.setFontSize(16);
-      pdf.text('Visualizations', margins, yOffset);
-      yOffset += 10;
-      
-      // Capture each visualization chart with higher quality
-      const chartContainers = containerRef.current.querySelectorAll('.chart-container');
-      
-      for (let i = 0; i < chartContainers.length; i++) {
-        const chart = chartContainers[i] as HTMLElement;
-        
-        // Always start each chart on a new page for better visibility
-        if (i > 0) {
-          pdf.addPage();
-          yOffset = margins;
-        }
-        
-        // Get chart title
-        const titleElement = chart.querySelector('.card-title');
-        const title = titleElement ? (titleElement as HTMLElement).innerText : `Chart ${i + 1}`;
-        
-        // Add chart title
-        pdf.setFontSize(14);
-        pdf.text(title, margins, yOffset);
-        yOffset += 7;
-        
-        // Get chart description if available
-        const descriptionElement = chart.querySelector('.text-muted-foreground');
-        if (descriptionElement) {
-          pdf.setFontSize(10);
-          pdf.text((descriptionElement as HTMLElement).innerText, margins, yOffset);
-          yOffset += 10;
-        }
-        
-        // Capture chart with improved settings for better visibility
-        const canvas = await html2canvas(chart, {
-          scale: 4, // Higher scale for better quality
-          logging: false,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#FFFFFF', // Force white background
-          onclone: (document, clone) => {
-            // Find the chart in the cloned document and adjust its styling
-            const cloneChart = clone.querySelector('.chart-container') as HTMLElement;
-            if (cloneChart) {
-              const svgElements = cloneChart.querySelectorAll('svg');
-              svgElements.forEach(svg => {
-                // Make SVG elements more visible
-                svg.style.width = '100%';
-                svg.style.height = '100%';
-                
-                // Enhance lines and text
-                const paths = svg.querySelectorAll('path');
-                paths.forEach(path => {
-                  path.style.strokeWidth = '3px';
-                });
-                
-                const texts = svg.querySelectorAll('text');
-                texts.forEach(text => {
-                  text.style.fontWeight = 'bold';
-                  text.style.fontSize = '14px';
-                });
-
-                // Enhance dots in scatter plots
-                const circles = svg.querySelectorAll('circle');
-                circles.forEach(circle => {
-                  circle.setAttribute('r', '6');
-                });
-              });
-            }
-          }
+          pdf.text(label, xOffset + 3, colY + 7);
         });
         
-        // Calculate dimensions to fit the page properly - make charts larger in the PDF
-        const imgWidth = pdfWidth - (margins * 2);
-        const imgHeight = Math.min((canvas.height * imgWidth) / canvas.width, 150); // Larger height for better visibility
+        colY += 15;
         
-        // Add the image to the PDF
-        try {
-          const imgData = canvas.toDataURL('image/png');
-          pdf.addImage(imgData, 'PNG', margins, yOffset, imgWidth, imgHeight);
-        } catch (e) {
-          console.error("Error adding image to PDF:", e);
-        }
+        // Table rows
+        pdf.setTextColor(60, 60, 80);
+        dataSummary.columns.slice(0, 20).forEach((col, i) => {
+          // Zebra striping
+          if (i % 2 === 0) {
+            pdf.setFillColor(248, 248, 255);
+            pdf.rect(margins, colY - 5, pdfWidth - margins * 2, 10, 'F');
+          }
+          
+          let xOffset = margins;
+          
+          // Column name
+          pdf.text(
+            col.name.substring(0, 20) + (col.name.length > 20 ? '...' : ''), 
+            xOffset + 3, 
+            colY
+          );
+          xOffset += colWidths[0];
+          
+          // Type
+          pdf.text(col.type, xOffset + 3, colY);
+          xOffset += colWidths[1];
+          
+          // Unique values
+          pdf.text(col.uniqueValues.toString(), xOffset + 3, colY);
+          xOffset += colWidths[2];
+          
+          // Missing values
+          pdf.text(col.missingValues.toString(), xOffset + 3, colY);
+          
+          colY += 10;
+          
+          // Add new page if table gets too long
+          if (colY > pdfHeight - margins && i < dataSummary.columns.length - 1) {
+            pdf.addPage();
+            
+            // Page header
+            pdf.setFillColor(240, 240, 255);
+            pdf.rect(0, 0, pdfWidth, 20, 'F');
+            
+            pdf.setFontSize(16);
+            pdf.setTextColor(50, 50, 120);
+            pdf.text("2. Column Analysis (continued)", margins, 15);
+            
+            colY = 30;
+            
+            // Repeat table header
+            pdf.setFillColor(230, 230, 250);
+            pdf.rect(margins, colY, pdfWidth - margins * 2, 10, 'F');
+            
+            pdf.setTextColor(50, 50, 120);
+            pdf.setFontSize(11);
+            headerLabels.forEach((label, i) => {
+              let xOffset = margins;
+              for (let j = 0; j < i; j++) {
+                xOffset += colWidths[j];
+              }
+              pdf.text(label, xOffset + 3, colY + 7);
+            });
+            
+            colY += 15;
+            pdf.setTextColor(60, 60, 80);
+          }
+        });
       }
       
-      // Add data sample section at the end
+      // Visualizations - Text-based descriptions (no screenshots)
       pdf.addPage();
-      yOffset = margins;
+      
+      // Page header
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(0, 0, pdfWidth, 20, 'F');
       
       pdf.setFontSize(16);
-      pdf.text('Data Sample (First Rows)', margins, yOffset);
-      yOffset += 10;
+      pdf.setTextColor(50, 50, 120);
+      pdf.text("3. Visualizations", margins, 15);
       
-      // Add data sample (first 15 rows max)
+      let vizY = 30;
+      
+      // For each visualization, create a descriptive page
+      visualizations.forEach((viz, vizIndex) => {
+        if (vizIndex > 0) {
+          pdf.addPage();
+          
+          // Page header
+          pdf.setFillColor(240, 240, 255);
+          pdf.rect(0, 0, pdfWidth, 20, 'F');
+          
+          const sectionTitle = `3.${vizIndex+1}. Visualization`;
+          pdf.setFontSize(16);
+          pdf.setTextColor(50, 50, 120);
+          pdf.text(sectionTitle, margins, 15);
+          
+          vizY = 30;
+        }
+        
+        // Visualization title
+        pdf.setFontSize(14);
+        pdf.setTextColor(70, 70, 100);
+        pdf.text(viz.title, margins, vizY);
+        vizY += 10;
+        
+        // Visualization info box
+        pdf.setFillColor(245, 245, 255);
+        pdf.rect(margins, vizY, pdfWidth - margins * 2, 50, 'F');
+        
+        // Chart type
+        pdf.setFontSize(11);
+        pdf.setTextColor(60, 60, 80);
+        pdf.text(`Chart Type: ${viz.type.charAt(0).toUpperCase() + viz.type.slice(1)}`, margins + 5, vizY + 10);
+        
+        // Description
+        if (viz.description) {
+          pdf.text(`Description: ${viz.description}`, margins + 5, vizY + 20);
+        }
+        
+        // Data fields
+        const fields = [];
+        if (viz.xAxis) fields.push(`X-Axis: ${viz.xAxis}`);
+        if (viz.yAxis) fields.push(`Y-Axis: ${viz.yAxis}`);
+        if (viz.categoryField) fields.push(`Category: ${viz.categoryField}`);
+        if (viz.valueField) fields.push(`Value: ${viz.valueField}`);
+        
+        fields.forEach((field, i) => {
+          pdf.text(field, margins + 5, vizY + 30 + (i * 7));
+        });
+        
+        // Draw insight box
+        vizY += 60;
+        pdf.setFillColor(240, 248, 255);
+        pdf.rect(margins, vizY, pdfWidth - margins * 2, 30, 'F');
+        
+        pdf.setFontSize(12);
+        pdf.setTextColor(50, 100, 150);
+        pdf.text("Potential Insights:", margins + 5, vizY + 10);
+        
+        // Generate simple insight based on chart type
+        let insight = "This visualization shows the relationship between data variables.";
+        switch (viz.type) {
+          case "bar":
+            insight = `Compares ${viz.categoryField || "categories"} by their ${viz.valueField || "values"}.`;
+            break;
+          case "line":
+            insight = `Shows trends in ${viz.yAxis || "values"} over ${viz.xAxis || "time"}.`;
+            break;
+          case "pie":
+            insight = `Shows the proportion of each ${viz.categoryField || "category"} to the whole.`;
+            break;
+          case "scatter":
+            insight = `Reveals correlation between ${viz.xAxis || "x-values"} and ${viz.yAxis || "y-values"}.`;
+            break;
+          default:
+            break;
+        }
+        
+        pdf.setFontSize(11);
+        pdf.setTextColor(60, 80, 120);
+        pdf.text(insight, margins + 5, vizY + 20);
+      });
+      
+      // Data Sample
+      pdf.addPage();
+      
+      // Page header
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(0, 0, pdfWidth, 20, 'F');
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(50, 50, 120);
+      pdf.text("4. Data Sample", margins, 15);
+      
+      let dataY = 30;
+      
+      // Add data sample (first 10 rows max)
       if (data.length > 0) {
         const columns = Object.keys(data[0]);
         const maxCols = Math.min(columns.length, 5); // Limit to 5 columns to fit on page
@@ -225,30 +371,30 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
         const colWidth = Math.min(30, (pdfWidth - margins * 2) / maxCols);
         
         // Table header
-        pdf.setFillColor(240, 240, 240);
-        pdf.rect(margins, yOffset, colWidth * maxCols, 7, 'F');
+        pdf.setFillColor(230, 230, 250);
+        pdf.rect(margins, dataY, colWidth * maxCols, 10, 'F');
         
-        pdf.setFontSize(8);
-        pdf.setTextColor(50, 50, 50);
+        pdf.setFontSize(11);
+        pdf.setTextColor(50, 50, 120);
         
         selectedColumns.forEach((col, colIndex) => {
           pdf.text(
             col.toString().substring(0, 12) + (col.length > 12 ? '...' : ''),
             margins + (colIndex * colWidth) + 2,
-            yOffset + 5
+            dataY + 7
           );
         });
         
-        yOffset += 7;
+        dataY += 15;
         
-        // Table rows (limit to 15)
-        const maxRows = Math.min(data.length, 15);
+        // Table rows (limit to 10)
+        const maxRows = Math.min(data.length, 10);
         
         for (let i = 0; i < maxRows; i++) {
           // Alternate row colors
-          if (i % 2 === 1) {
-            pdf.setFillColor(250, 250, 250);
-            pdf.rect(margins, yOffset, colWidth * maxCols, 7, 'F');
+          if (i % 2 === 0) {
+            pdf.setFillColor(248, 248, 255);
+            pdf.rect(margins, dataY - 5, colWidth * maxCols, 10, 'F');
           }
           
           selectedColumns.forEach((col, colIndex) => {
@@ -256,20 +402,19 @@ const PDFExport: React.FC<{ containerRef: React.RefObject<HTMLDivElement> }> = (
             pdf.text(
               value.substring(0, 14) + (value.length > 14 ? '...' : ''),
               margins + (colIndex * colWidth) + 2,
-              yOffset + 5
+              dataY
             );
           });
           
-          yOffset += 7;
+          dataY += 10;
         }
         
         // If there are more rows, indicate this with a message
         if (data.length > maxRows) {
-          yOffset += 5;
+          dataY += 5;
           pdf.setTextColor(100, 100, 100);
-          // Fix: setFontStyle doesn't exist in jsPDF v3, use setFont with style parameter instead
           pdf.setFont(undefined, 'italic');
-          pdf.text(`(${data.length - maxRows} more rows not shown)`, margins, yOffset);
+          pdf.text(`(${data.length - maxRows} more rows not shown)`, margins, dataY);
         }
       }
       

@@ -7,6 +7,7 @@ import ManualInput from '@/components/ManualInput';
 import Visualizations from '@/components/Visualizations';
 import DataSummary from '@/components/DataSummary';
 import PDFExport from '@/components/PDFExport';
+import ChartSelectionDialog from '@/components/ChartSelectionDialog';
 import { DataProvider, useData } from '@/context/DataContext';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileUpIcon, PencilRuler, BarChart, RefreshCw, ListFilter } from 'lucide-react';
@@ -68,6 +69,9 @@ const DataControls = () => {
               </div>
             </TabsContent>
           </Tabs>
+          
+          {/* Chart Selection Dialog */}
+          <ChartSelectionDialog />
         </div>
       ) : (
         <div className="mt-2">

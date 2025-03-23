@@ -8,7 +8,13 @@ import { useData } from '../context/DataContext';
 import { toast } from '@/components/ui/use-toast';
 
 const FileUpload: React.FC = () => {
-  const { setData, setIsLoading, setFileName, setDataSummary } = useData();
+  const { 
+    setData, 
+    setIsLoading, 
+    setFileName, 
+    setDataSummary,
+    setShowChartSelectionDialog
+  } = useData();
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [processingFile, setProcessingFile] = useState(false);
 
@@ -46,13 +52,28 @@ const FileUpload: React.FC = () => {
     setProcessingFile(true);
     try {
       const { data: processedData, summary } = await processFile(currentFile);
+      
+      console.log("File processed successfully:", { 
+        rows: processedData.length, 
+        columns: summary.columnCount,
+        recommendedCharts: summary.recommendedVisualizations?.length || 0 
+      });
+      
       setData(processedData);
       setDataSummary(summary);
+      
       toast({
         title: "File processed successfully",
         description: `Loaded ${processedData.length} rows of data with ${summary.columnCount} columns`,
       });
+      
+      // After successful processing, show the chart selection dialog
+      setTimeout(() => {
+        setShowChartSelectionDialog(true);
+      }, 1000);
+      
     } catch (error) {
+      console.error("Error processing file:", error);
       toast({
         title: "Error processing file",
         description: error instanceof Error ? error.message : "Unknown error",
